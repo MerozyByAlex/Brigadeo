@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
-import Button from '../../components/ui/Button';
-import Modal from '../../components/ui/Modal';
-import RecipeForm from '../../components/recipes/RecipeForm';
-import RecipeDetail from '../../components/recipes/RecipeDetail';
-import RecipeCard from '../../components/recipes/RecipeCard';
+import { useToast } from '../../hooks/useToast';
+import { CheckCircle, X, Save } from 'lucide-react';
+import FormField from '../ui/FormField';
+import Input from '../ui/Input';
+import Button from '../ui/Button';
+import clsx from 'clsx';
 
 type Recipe = {
   id: string;
@@ -19,135 +19,208 @@ type Recipe = {
   };
 };
 
-export default function RecipeList() {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [selectedRecipeForDetails, setSelectedRecipeForDetails] = useState<string | null>(null);
+type RecipeFormProps = {
+  initialData?: Recipe;
+  onSuccess: () => void;
+};
 
-  const fetchRecipes = async () => {
+type Restaurant = {
+  id: string;
+  name: string;
+};
+
+export default function RecipeForm({ initialData, onSuccess }: RecipeFormProps) {
+  const [name, setName] = useState(initialData?.name ?? '');
+  const [description, setDescription] = useState(initialData?.description ?? '');
+  const [portions, setPortions] = useState(initialData?.portions ?? 1);
+  const [restaurantId, setRestaurantId] = useState(initialData?.restaurant_id ?? '');
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const showToast = useToast();
+
+  useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const profile = await getCurrentProfile();
+        
+        if (!profile.organization_id) {
+          throw new Error("Aucune organisation trouvée");
+        }
+
+        const { data, error: fetchError } = await supabase
+          .from('restaurant')
+          .select('id, name')
+          .eq('organization_id', profile.organization_id)
+          .order('name');
+
+        if (fetchError) throw fetchError;
+        setRestaurants(data || []);
+
+        if (data && data.length === 1 && !initialData) {
+          setRestaurantId(data[0].id);
+        }
+      } catch (err) {
+        setError("Impossible de charger les restaurants");
+        console.error(err);
+      }
+    };
+
+    fetchRestaurants();
+  }, [initialData]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    const trimmedName = name.trim();
+    const trimmedDescription = description.trim();
+
+    if (trimmedName.length < 2) {
+      setError('Le nom doit contenir au moins 2 caractères');
+      return;
+    }
+
+    if (!restaurantId) {
+      setError('Veuillez sélectionner un restaurant');
+      return;
+    }
+
+    if (portions < 1) {
+      setError('Le nombre de portions doit être supérieur à 0');
+      return;
+    }
+
+    setLoading(true);
+
     try {
       const profile = await getCurrentProfile();
-
+      
       if (!profile.organization_id) {
         throw new Error("Aucune organisation trouvée");
       }
 
-      const { data, error: recipesError } = await supabase
-        .from('recipes')
-        .select(`
-          id,
-          name,
-          description,
-          portions,
-          restaurant_id,
-          restaurant:restaurant_id ( name )
-        `)
-        .eq('organization_id', profile.organization_id)
-        .order('name');
+      const recipeData = {
+        name: trimmedName,
+        description: trimmedDescription || null,
+        portions,
+        restaurant_id: restaurantId,
+        organization_id: profile.organization_id
+      };
 
-      if (recipesError) throw recipesError;
-      setRecipes(data as Recipe[] || []);
+      let error;
+      
+      if (initialData) {
+        ({ error } = await supabase
+          .from('recipes')
+          .update(recipeData)
+          .eq('id', initialData.id));
+      } else {
+        ({ error } = await supabase
+          .from('recipes')
+          .insert([recipeData]));
+      }
+
+      if (error) throw error;
+
+      showToast({
+        text: initialData
+          ? "Recette mise à jour avec succès !"
+          : "Recette créée avec succès !",
+        color: 'success',
+        icon: <CheckCircle className="h-4 w-4" />
+      });
+
+      onSuccess();
     } catch (err) {
-      setError("Impossible de charger les recettes");
+      setError(
+        err instanceof Error
+          ? err.message
+          : `Une erreur s'est produite lors de la ${initialData ? 'modification' : 'création'} de la recette`
+      );
       console.error(err);
+      showToast({
+        text: "Quelque chose s'est mal passé",
+        color: 'error',
+        icon: <X className="h-4 w-4" />
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchRecipes();
-  }, []);
-
-  const handleSuccess = () => {
-    setIsModalOpen(false);
-    setSelectedRecipe(null);
-    fetchRecipes();
-  };
-
-  const handleEdit = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
-    setIsModalOpen(true);
-  };
-
-  const handleCreate = () => {
-    setSelectedRecipe(null);
-    setIsModalOpen(true);
-  };
-
-  if (loading) {
-    return <div className="text-center">Chargement...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-600 text-center">{error}</div>;
-  }
-
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Mes recettes</h1>
-        <Button
-          icon={<Plus className="h-4 w-4" />}
-          onClick={handleCreate}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormField label="Nom de la recette" required>
+        <Input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </FormField>
+
+      <FormField label="Description">
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          rows={4}
+        />
+      </FormField>
+
+      <FormField label="Nombre de portions" required>
+        <Input
+          type="number"
+          min="1"
+          value={portions}
+          onChange={(e) => setPortions(parseInt(e.target.value) || 1)}
+          required
+        />
+      </FormField>
+
+      <FormField label="Restaurant" required>
+        <select
+          value={restaurantId}
+          onChange={(e) => setRestaurantId(e.target.value)}
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          required
         >
-          Créer une recette
+          <option value="">Sélectionner un restaurant...</option>
+          {restaurants.map((restaurant) => (
+            <option key={restaurant.id} value={restaurant.id}>
+              {restaurant.name}
+            </option>
+          ))}
+        </select>
+      </FormField>
+
+      <div className="flex gap-2">
+        <Button
+          type="submit"
+          loading={loading}
+          disabled={loading}
+          icon={initialData && <Save className="h-4 w-4" />}
+          className={clsx(
+            'transition-all duration-300 ease-in-out',
+            initialData && {
+              'w-full': true
+            },
+            !initialData && 'w-full'
+          )}
+        >
+          {initialData ? 'Mettre à jour' : 'Créer'}
         </Button>
       </div>
 
-      <Modal
-        size="lg"
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedRecipe(null);
-        }}
-        title={selectedRecipe ? "Modifier la recette" : "Créer une recette"}
-      >
-        <RecipeForm
-          initialData={selectedRecipe || undefined}
-          onSuccess={handleSuccess}
-        />
-      </Modal>
-
-      <Modal
-        size="lg"
-        isOpen={!!selectedRecipeForDetails}
-        onClose={() => setSelectedRecipeForDetails(null)}
-        title="Détails de la recette"
-      >
-        {selectedRecipeForDetails && (
-          <RecipeDetail
-            recipeId={selectedRecipeForDetails}
-            onClose={() => setSelectedRecipeForDetails(null)}
-            onEdit={(recipe) => {
-              setSelectedRecipeForDetails(null);
-              handleEdit(recipe);
-            }}
-          />
-        )}
-      </Modal>
-
-      {recipes.length === 0 ? (
-        <div className="text-center text-gray-500 mt-8">
-          Vous n'avez pas encore de recettes.
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {recipes.map((recipe) => (
-            <RecipeCard
-              key={recipe.id}
-              name={recipe.name}
-              restaurantName={recipe.restaurant.name}
-              onClick={() => setSelectedRecipeForDetails(recipe.id)}
-              onEdit={() => handleEdit(recipe)}
-            />
-          ))}
+      {error && (
+        <div
+          className="p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm"
+          role="alert"
+        >
+          {error}
         </div>
       )}
-    </div>
+    </form>
   );
 }

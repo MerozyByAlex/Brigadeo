@@ -4,9 +4,9 @@ import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
 import { analyzeInvoice } from '../../services/invoice';
 import { mapAIResponseToFormData } from '../../utils/aiMapping';
+import ProductMultiForm from '../../components/products/ProductMultiForm';
 import type { ProductFormValue } from '../../components/products/ProductMultiForm';
 import { FileText, Loader2 } from 'lucide-react';
-import ProductMultiForm from '../../components/products/ProductMultiForm';
 import SelectInvoiceModal from '../../components/invoices/SelectInvoiceModal';
 import Button from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
@@ -82,7 +82,10 @@ export default function ProductInput() {
       console.log(`✅ Analyse IA terminée en ${duration} secondes`);
       
       const mapped = mapAIResponseToFormData(aiData, ingredients);
-      setInitialProducts(mapped);
+      setInitialProducts(mapped.map(item => ({
+        ...item,
+        date: typeof item.date === 'string' ? item.date : item.date.toISOString()
+      })));
     } catch (err) {
       const duration = ((Date.now() - startTimeRef.current) / 1000).toFixed(2);
       console.log(`✅ Analyse IA terminée en ${duration} secondes`);

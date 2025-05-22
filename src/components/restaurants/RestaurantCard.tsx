@@ -1,15 +1,13 @@
 import { formatDate } from '../../utils/date';
 import { Pencil } from 'lucide-react';
-
-type RestaurantCardProps = {
-  id: string;
+export type RestaurantCardProps = {
   name: string;
   created_at: string;
   onClick?: () => void;
   onEdit?: () => void;
 };
 
-export default function RestaurantCard({ id, name, created_at, onClick, onEdit }: RestaurantCardProps) {
+export default function RestaurantCard({ name, created_at, onClick, onEdit }: RestaurantCardProps) {
   return (
     <div
       onClick={onClick}

@@ -50,8 +50,14 @@ export default function RecipeList() {
         .order('name');
 
       if (recipesError) throw recipesError;
+      const cleanedData = (data || []).map(recipe => ({
+        ...recipe,
+        restaurant: Array.isArray(recipe.restaurant)
+          ? recipe.restaurant[0]
+          : recipe.restaurant
+      }));
 
-      setRecipes(data || []);
+      setRecipes(cleanedData);
     } catch (err) {
       setError("Impossible de charger les recettes");
       console.error(err);
@@ -142,7 +148,6 @@ export default function RecipeList() {
           {recipes.map((recipe) => (
             <RecipeCard
               key={recipe.id}
-              id={recipe.id}
               name={recipe.name}
               restaurantName={recipe.restaurant.name}
               onClick={() => setSelectedRecipeForDetails(recipe.id)}

@@ -78,6 +78,9 @@ export default function IngredientList() {
       // Transforme le tableau lastProduct en objet unique
       const ingredientsWithLastProduct = (data || []).map(ingredient => ({
         ...ingredient,
+        category: Array.isArray(ingredient.category) 
+          ? ingredient.category[0] 
+          : ingredient.category,
         lastProduct: ingredient.lastProduct?.[0]
       }));
 
@@ -105,7 +108,10 @@ export default function IngredientList() {
       id: ingredient.id,
       name: ingredient.name,
       unit: ingredient.unit,
-      category_id: ingredient.category?.id ?? null
+      organization_id: ingredient.organization_id,
+      created_at: ingredient.created_at,
+      category: ingredient.category,
+      lastProduct: ingredient.lastProduct
     });
     setIsModalOpen(true);
   };

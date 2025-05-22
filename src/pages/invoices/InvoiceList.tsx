@@ -47,7 +47,13 @@ export default function InvoiceList() {
         .order('date', { ascending: false });
 
       if (fetchError) throw fetchError;
-      setInvoices(data || []);
+        const formattedInvoices = (data || []).map(invoice => ({
+          ...invoice,
+          restaurant: Array.isArray(invoice.restaurant)
+            ? invoice.restaurant[0]
+            : invoice.restaurant
+        }));
+        setInvoices(formattedInvoices);
     } catch (err) {
       setError(
         err instanceof Error
@@ -68,10 +74,11 @@ export default function InvoiceList() {
     try {
       setLoadingInvoiceId(invoice.id);
 
-      const { data: { signedUrl }, error: signedUrlError } = await supabase.storage
+      const { data, error: signedUrlError } = await supabase.storage
         .from('invoices')
         .createSignedUrl(invoice.storage_path, 3600);
-
+      
+      const signedUrl = data?.signedUrl;
       if (signedUrlError) throw signedUrlError;
       if (!signedUrl) throw new Error("Impossible de générer l'URL de la facture");
 

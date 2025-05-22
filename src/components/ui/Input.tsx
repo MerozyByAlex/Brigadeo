@@ -17,7 +17,7 @@ const sizeClasses = {
   sm: 'h-8 text-sm',
   md: 'h-10 text-base',
   lg: 'h-12 text-lg'
-} as const satisfies Record<string, string>;
+} as const;
 
 const variantClasses = {
   default: 'border-gray-300 focus:border-gray-500',
@@ -57,7 +57,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
             'w-full rounded-md border bg-white px-3 shadow-sm',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
             'disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500',
-            sizeClasses[size],
+            sizeClasses[size as keyof typeof sizeClasses],
             variantClasses[variant],
             icon && 'pl-10',
             (loading || rightIcon) && 'pr-10',

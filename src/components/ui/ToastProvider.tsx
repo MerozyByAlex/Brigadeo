@@ -1,27 +1,20 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import Toast, { ToastProps } from './Toast';
+import { createContext, useState, useCallback, type ReactNode } from 'react';
+import type { ToastProps } from './Toast';
+import Toast from './Toast';
 
 type ToastContextType = {
-  showToast: (props: Omit<ToastProps, 'id' | 'onClose'>) => void;
+  showToast: (props: Omit<ToastProps, 'onClose'>) => void;
 };
+
+type ToastItem = ToastProps & { id: string };
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
-type Toast = ToastProps & { id: string };
-
-type ToastProps = {
-  id: string;
-  text: string;
-  onClose?: () => void;
-  color?: 'success' | 'error' | 'info' | 'warning';
-  icon?: ReactNode;
-};
-
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const showToast = useCallback((props: Omit<ToastProps, 'id' | 'onClose'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
+    const id = crypto.randomUUID();
     setToasts(prev => [...prev, { ...props, id }]);
   }, []);
 

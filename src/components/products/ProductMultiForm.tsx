@@ -11,7 +11,7 @@ type Ingredient = {
   unit: 'weight' | 'volume' | 'unit';
 };
 
-type ProductFormValue = {
+export type ProductFormValue = {
   ingredient_id: string;
   label?: string;
   quantity: number;

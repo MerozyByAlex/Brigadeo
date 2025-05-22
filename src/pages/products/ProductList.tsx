@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
-import { formatDate } from '../../utils/date';
 import Modal from '../../components/ui/Modal';
 import ProductDetail from '../../components/products/ProductDetail';
 import { calculateCost } from '../../utils/costCalculator';
@@ -77,7 +76,13 @@ export default function ProductList() {
           .order('date', { ascending: false });
 
         if (fetchError) throw fetchError;
-        setProducts(data || []);
+        const formattedProducts = (data || []).map(product => ({
+          ...product,
+          ingredient: Array.isArray(product.ingredient)
+            ? product.ingredient[0]
+            : product.ingredient
+        }));
+        setProducts(formattedProducts);
       } catch (err) {
         setError(
           err instanceof Error

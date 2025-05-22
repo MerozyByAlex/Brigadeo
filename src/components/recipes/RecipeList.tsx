@@ -51,7 +51,14 @@ export default function RecipeList() {
         .order('name');
 
       if (recipesError) throw recipesError;
-      setRecipes(data as Recipe[] || []);
+      const formattedRecipes = (data || []).map(recipe => ({
+        ...recipe,
+        restaurant: Array.isArray(recipe.restaurant)
+          ? recipe.restaurant[0]
+          : recipe.restaurant
+      }));
+
+      setRecipes(formattedRecipes);
     } catch (err) {
       setError("Impossible de charger les recettes");
       console.error(err);

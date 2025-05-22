@@ -6,19 +6,16 @@ import { calculateCost } from '../../utils/costCalculator';
 import Button from '../ui/Button';
 import { X, Pencil } from 'lucide-react';
 
+type Ingredient = {
+  id: string;
+  name: string;
+  unit: 'weight' | 'volume' | 'unit';
+};
+
 type RecipeDetailProps = {
   recipeId: string;
   onClose: () => void;
   onEdit?: (recipe: RecipeDetails) => void;
-};
-
-type IngredientData = {
-  ingredient: {
-    id: string;
-    name: string;
-    unit: 'weight' | 'volume' | 'unit';
-  };
-  quantity: number;
 };
 
 type RecipeDetails = {
@@ -26,7 +23,10 @@ type RecipeDetails = {
   name: string;
   portions: number;
   description: string | null;
-  restaurant: { name: string };
+  restaurant_id: string; // ✅ AJOUTER CECI
+  restaurant: {
+    name: string;
+  };
   ingredients: {
     id: string;
     name: string;
@@ -35,6 +35,7 @@ type RecipeDetails = {
     costCents?: number;
   }[];
 };
+
 
 const UNIT_LABELS = {
   weight: 'grammes',
@@ -56,6 +57,7 @@ export default function RecipeDetail({ recipeId, onClose, onEdit }: RecipeDetail
             id,
             name,
             portions,
+            restaurant_id,
             description,
             restaurant:restaurant_id!inner (
               name
@@ -70,20 +72,21 @@ export default function RecipeDetail({ recipeId, onClose, onEdit }: RecipeDetail
           .from('recipe_ingredients')
           .select(`
             quantity,
-            ingredient:ingredient_id!inner (
+            ingredient:ingredient_id (
               id,
               name,
               unit
-            )
-          `)
+            )`)
           .eq('recipe_id', recipeId);
 
         if (ingredientsError) throw ingredientsError;
 
         const ingredientsWithCosts = await Promise.all(
-          (ingredientsData || []).map(async (item) => {
-            const ingredient = item.ingredient as IngredientData['ingredient'];
+          (ingredientsData || []).map(async (item: { quantity: number; ingredient: Ingredient | Ingredient[] | null }) => {
             const quantity = item.quantity;
+            const ingredient = Array.isArray(item.ingredient)
+              ? item.ingredient[0]
+              : item.ingredient as Ingredient;
 
             if (!ingredient) return null;
 
@@ -116,6 +119,10 @@ export default function RecipeDetail({ recipeId, onClose, onEdit }: RecipeDetail
 
         setRecipe({
           ...recipeData,
+          restaurant_id: recipeData.restaurant_id,
+          restaurant: Array.isArray(recipeData.restaurant) 
+            ? recipeData.restaurant[0] 
+            : recipeData.restaurant,
           ingredients: ingredientsWithCosts.filter(Boolean) as RecipeDetails['ingredients'],
         });
       } catch (err) {
