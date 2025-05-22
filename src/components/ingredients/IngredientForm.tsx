@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Save, Trash2, CheckCircle, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
+import { useScreenSizeCategory } from '../../hooks/useScreenSizeCategory';
+import { useToast } from '../../hooks/useToast';
+import IngredientCategoryManager from './IngredientCategoryManager';
 import { useHasChanged } from '../../hooks/useHasChanged';
 import FormField from '../ui/FormField';
-import Input from '../ui/Input';
+import { Input } from '../ui/Input';
 import Button from '../ui/Button';
-import { Save, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
 const UNIT_OPTIONS = [
@@ -19,6 +22,7 @@ type IngredientFormProps = {
     id: string;
     name: string;
     unit: 'weight' | 'volume' | 'unit';
+    category_id?: string | null;
   };
   onSuccess: () => void;
 };
@@ -26,13 +30,68 @@ type IngredientFormProps = {
 export default function IngredientForm({ initialData, onSuccess }: IngredientFormProps) {
   const [name, setName] = useState(initialData?.name ?? '');
   const [unit, setUnit] = useState(initialData?.unit ?? 'weight');
+  const [categoryId, setCategoryId] = useState<string | null>(initialData?.category_id ?? null);
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
+  const showToast = useToast();
   const [nameError, setNameError] = useState('');
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const hasChanged = useHasChanged(
-    { name: initialData?.name, unit: initialData?.unit },
-    { name: name.trim(), unit }
+    { 
+      name: initialData?.name, 
+      unit: initialData?.unit,
+      category_id: initialData?.category_id 
+    },
+    { 
+      name: name.trim(), 
+      unit,
+      category_id: categoryId 
+    }
   );
+  const screenSize = useScreenSizeCategory();
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter') return;
+    
+    e.preventDefault();
+    
+    const focusableElements = Array.from(
+      e.currentTarget.querySelectorAll<HTMLElement>(
+        'input:not([type="hidden"]):not([disabled]), select:not([disabled])'
+      )
+    );
+    
+    const currentIndex = focusableElements.findIndex(
+      element => element === document.activeElement
+    );
+    
+    if (currentIndex > -1 && currentIndex < focusableElements.length - 1) {
+      focusableElements[currentIndex + 1].focus();
+    }
+  };
+
+  const maxVisibleBySize = {
+    mobile: 2,
+    sm: 4,
+    md: 6,
+    lg: 8,
+    xl: 10,
+    xxl: 12,
+  };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await getCurrentProfile();
+        setOrganizationId(profile.organization_id);
+      } catch (err) {
+        console.error(err);
+        setGlobalError("Impossible de charger le profil");
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +119,7 @@ export default function IngredientForm({ initialData, onSuccess }: IngredientFor
       if (initialData) {
         ({ error } = await supabase
           .from('ingredient')
-          .update({ name: trimmedName, unit })
+          .update({ name: trimmedName, unit, category_id: categoryId })
           .eq('id', initialData.id)
           .eq('organization_id', profile.organization_id));
       } else {
@@ -69,6 +128,7 @@ export default function IngredientForm({ initialData, onSuccess }: IngredientFor
           .insert([{
             name: trimmedName,
             unit,
+            category_id: categoryId,
             organization_id: profile.organization_id
           }]));
       }
@@ -79,6 +139,13 @@ export default function IngredientForm({ initialData, onSuccess }: IngredientFor
         setName('');
         setUnit('weight');
       }
+      showToast({
+        text: initialData
+          ? "Ingrédient mis à jour avec succès !"
+          : "Ingrédient créé avec succès !",
+        color: 'success',
+        icon: <CheckCircle className="h-4 w-4" />
+      });
       onSuccess();
     } catch (err) {
       setGlobalError(
@@ -87,6 +154,11 @@ export default function IngredientForm({ initialData, onSuccess }: IngredientFor
           : `Une erreur s'est produite lors de la ${initialData ? 'modification' : 'création'} de l'ingrédient`
       );
       console.error(err);
+      showToast({
+        text: "Quelque chose s'est mal passé",
+        color: 'error',
+        icon: <X className="h-4 w-4" />
+      });
     } finally {
       setLoading(false);
     }
@@ -117,6 +189,11 @@ export default function IngredientForm({ initialData, onSuccess }: IngredientFor
 
       if (error) throw error;
 
+      showToast({
+        text: "Ingrédient supprimé avec succès !",
+        color: 'success',
+        icon: <CheckCircle className="h-4 w-4" />
+      });
       onSuccess();
     } catch (err) {
       setGlobalError(
@@ -125,13 +202,18 @@ export default function IngredientForm({ initialData, onSuccess }: IngredientFor
           : "Une erreur s'est produite lors de la suppression de l'ingrédient"
       );
       console.error(err);
+      showToast({
+        text: "Quelque chose s'est mal passé",
+        color: 'error',
+        icon: <X className="h-4 w-4" />
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-4">
       <FormField label="Nom de l'ingrédient" error={nameError} required>
         <Input
           type="text"
@@ -142,18 +224,30 @@ export default function IngredientForm({ initialData, onSuccess }: IngredientFor
       </FormField>
 
       <FormField label="Type de mesure" required>
-        <select
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          {UNIT_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </FormField>
+  <select
+    value={unit}
+    onChange={(e) => setUnit(e.target.value as 'weight' | 'volume' | 'unit')}
+    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+  >
+    {UNIT_OPTIONS.map(option => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+</FormField>
+
+      {organizationId && (
+        <FormField label="Catégorie">
+          <IngredientCategoryManager
+            tableName="ingredient_category"
+            selectedId={categoryId}
+            onChange={setCategoryId}
+            organizationId={organizationId}
+            maxVisible={maxVisibleBySize[screenSize]}
+          />
+        </FormField>
+      )}
 
       <div className="flex gap-2">
         <Button

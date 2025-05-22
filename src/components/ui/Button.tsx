@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
 type ButtonProps = {
-  children: ReactNode;
+  children?: ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;

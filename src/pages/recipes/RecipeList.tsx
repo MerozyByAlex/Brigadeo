@@ -125,6 +125,10 @@ export default function RecipeList() {
           <RecipeDetail
             recipeId={selectedRecipeForDetails}
             onClose={() => setSelectedRecipeForDetails(null)}
+            onEdit={(recipe) => {
+              setSelectedRecipeForDetails(null);
+              handleEdit(recipe);
+            }}
           />
         )}
       </Modal>

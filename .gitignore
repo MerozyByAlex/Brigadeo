@@ -1,0 +1,45 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Build / Dist
+dist/
+dist-ssr/
+build/
+.out/
+
+# TypeScript
+*.tsbuildinfo
+
+# Env files
+.env
+.env.*
+!env.example
+backend/.env
+
+# Supabase
+.supabase/
+supabase/.temp/
+
+# Frontend tools
+.next/
+out/
+.vercel/
+.netlify/
+
+# Bolt
+.bolt/
+
+# Logs
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Misc
+*.local

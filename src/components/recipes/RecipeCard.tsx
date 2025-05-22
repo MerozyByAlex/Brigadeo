@@ -1,14 +1,13 @@
 import { Pencil } from 'lucide-react';
 
 type RecipeCardProps = {
-  id: string;
   name: string;
   restaurantName: string;
   onEdit: () => void;
   onClick: () => void;
 };
 
-export default function RecipeCard({ id, name, restaurantName, onEdit, onClick }: RecipeCardProps) {
+export default function RecipeCard({ name, restaurantName, onEdit, onClick }: RecipeCardProps) {
   return (
     <div
       onClick={onClick}

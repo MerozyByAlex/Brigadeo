@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
@@ -17,12 +17,13 @@ type ProductFormValue = {
   quantity: number;
   unit: string;
   price: number;
-  date: Date;
+  date: string;
 };
 
 type ProductMultiFormProps = {
   ingredients: Ingredient[];
   onSuccess: () => void;
+  onFillAI?: (fill: (products: ProductFormValue[]) => void) => void;
 };
 
 const UNIT_OPTIONS = {
@@ -45,7 +46,7 @@ const DEFAULT_PRODUCT: ProductFormValue = {
   quantity: 0,
   unit: '',
   price: 0,
-  date: new Date()
+  date: new Date().toISOString().slice(0, 16)
 };
 
 const convertToBasicUnit = (value: number, unit: string, type: 'weight' | 'volume' | 'unit'): number => {
@@ -54,10 +55,16 @@ const convertToBasicUnit = (value: number, unit: string, type: 'weight' | 'volum
   return option ? value * option.factor : value;
 };
 
-export default function ProductMultiForm({ ingredients, onSuccess }: ProductMultiFormProps) {
+export default function ProductMultiForm({ ingredients, onSuccess, onFillAI }: ProductMultiFormProps) {
   const [products, setProducts] = useState<ProductFormValue[]>([{ ...DEFAULT_PRODUCT }]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (onFillAI) {
+      onFillAI((products) => setProducts(products));
+    }
+  }, [onFillAI]);
 
   const handleAddProduct = () => {
     setProducts([...products, { ...DEFAULT_PRODUCT }]);

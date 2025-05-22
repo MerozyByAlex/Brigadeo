@@ -4,11 +4,21 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { calculateCost } from '../../utils/costCalculator';
 import Button from '../ui/Button';
-import { X } from 'lucide-react';
+import { X, Pencil } from 'lucide-react';
 
 type RecipeDetailProps = {
   recipeId: string;
   onClose: () => void;
+  onEdit?: (recipe: RecipeDetails) => void;
+};
+
+type IngredientData = {
+  ingredient: {
+    id: string;
+    name: string;
+    unit: 'weight' | 'volume' | 'unit';
+  };
+  quantity: number;
 };
 
 type RecipeDetails = {
@@ -16,9 +26,7 @@ type RecipeDetails = {
   name: string;
   portions: number;
   description: string | null;
-  restaurant: {
-    name: string;
-  };
+  restaurant: { name: string };
   ingredients: {
     id: string;
     name: string;
@@ -34,7 +42,7 @@ const UNIT_LABELS = {
   unit: 'unité(s)',
 };
 
-export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
+export default function RecipeDetail({ recipeId, onClose, onEdit }: RecipeDetailProps) {
   const [recipe, setRecipe] = useState<RecipeDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,21 +57,20 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
             name,
             portions,
             description,
-            restaurant:restaurant_id (
+            restaurant:restaurant_id!inner (
               name
             )
           `)
           .eq('id', recipeId)
           .single();
 
-        if (recipeError) throw recipeError;
-        if (!recipeData) throw new Error('Recette non trouvée');
+        if (recipeError || !recipeData) throw recipeError || new Error('Recette non trouvée');
 
         const { data: ingredientsData, error: ingredientsError } = await supabase
           .from('recipe_ingredients')
           .select(`
             quantity,
-            ingredient:ingredient_id (
+            ingredient:ingredient_id!inner (
               id,
               name,
               unit
@@ -75,10 +82,15 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
 
         const ingredientsWithCosts = await Promise.all(
           (ingredientsData || []).map(async (item) => {
+            const ingredient = item.ingredient as IngredientData['ingredient'];
+            const quantity = item.quantity;
+
+            if (!ingredient) return null;
+
             const { data: productData } = await supabase
               .from('product')
               .select('price_cents, quantity')
-              .eq('ingredient_id', item.ingredient.id)
+              .eq('ingredient_id', ingredient.id)
               .order('date', { ascending: false })
               .limit(1)
               .single();
@@ -87,16 +99,16 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
               ? calculateCost(
                   productData.price_cents,
                   productData.quantity,
-                  item.ingredient.unit,
-                  item.quantity
+                  ingredient.unit,
+                  quantity
                 )
               : undefined;
 
             return {
-              id: item.ingredient.id,
-              name: item.ingredient.name,
-              unit: item.ingredient.unit,
-              quantity: item.quantity,
+              id: ingredient.id,
+              name: ingredient.name,
+              unit: ingredient.unit,
+              quantity,
               costCents,
             };
           })
@@ -104,7 +116,7 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
 
         setRecipe({
           ...recipeData,
-          ingredients: ingredientsWithCosts,
+          ingredients: ingredientsWithCosts.filter(Boolean) as RecipeDetails['ingredients'],
         });
       } catch (err) {
         setError(
@@ -142,7 +154,7 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
       <div className="space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">{recipe.name}</h2>
         <p className="text-gray-500">{recipe.portions} portion{recipe.portions > 1 ? 's' : ''}</p>
-        <p className="text-gray-600">Restaurant : {recipe.restaurant.name}</p>
+        <p className="text-gray-600">Restaurant : {recipe.restaurant?.name}</p>
       </div>
 
       {recipe.description && (
@@ -152,9 +164,7 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
       )}
 
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Ingrédients
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Ingrédients</h3>
         <div className="space-y-3">
           {recipe.ingredients.map((ingredient) => (
             <div
@@ -180,7 +190,7 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
       {totalCost > 0 && (
         <div className="mt-6 pt-4 border-t border-gray-200">
           <p className="text-lg font-semibold text-gray-900">
-            Coût total estimé : {totalCost.toFixed(2)} € 
+            Coût total estimé : {totalCost.toFixed(2)} €
             {recipe.portions > 0 && (
               <span className="text-base font-normal text-gray-600 ml-2">
                 (soit {(totalCost / recipe.portions).toFixed(2)} € par portion)
@@ -194,6 +204,15 @@ export default function RecipeDetail({ recipeId, onClose }: RecipeDetailProps) {
       )}
 
       <div className="flex justify-end">
+        {onEdit && (
+          <Button
+            onClick={() => onEdit(recipe)}
+            icon={<Pencil className="h-4 w-4" />}
+            className="mr-2"
+          >
+            Modifier
+          </Button>
+        )}
         <Button
           variant="outline"
           onClick={onClose}

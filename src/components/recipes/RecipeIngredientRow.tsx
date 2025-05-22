@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
+import clsx from 'clsx';
 import FormField from '../ui/FormField';
 import Input from '../ui/Input';
-import Button from '../ui/Button';
 
 type Ingredient = {
   id: string;
@@ -18,7 +18,8 @@ type RecipeIngredientRowProps = {
   ingredients: Ingredient[];
   onChange: (value: { ingredient_id: string; quantity: number }) => void;
   onDelete: () => void;
-  showLabels?: boolean;
+  highlighted?: boolean;
+  showLabels?: boolean; // 👈 ajouté ici
 };
 
 const UNIT_LABELS = {
@@ -32,6 +33,7 @@ export default function RecipeIngredientRow({
   ingredients,
   onChange,
   onDelete,
+  highlighted = false,
   showLabels = false
 }: RecipeIngredientRowProps) {
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | undefined>(
@@ -43,60 +45,74 @@ export default function RecipeIngredientRow({
   }, [value.ingredient_id, ingredients]);
 
   return (
-    <div className="grid grid-cols-12 gap-4 items-end">
-      <div className="col-span-5">
-        <FormField 
-          label={showLabels ? "Ingrédient" : undefined}
-          required={showLabels}
-        >
-          <select
-            value={value.ingredient_id}
-            onChange={(e) => onChange({ ...value, ingredient_id: e.target.value })}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">Sélectionner...</option>
-            {ingredients.map(ingredient => (
-              <option key={ingredient.id} value={ingredient.id}>
-                {ingredient.name}
-              </option>
-            ))}
-          </select>
-        </FormField>
-      </div>
+    <div className="grid grid-cols-[1fr_200px_40px] items-center gap-x-4">
+      {showLabels && <FormField label="Ingrédient">
+        <div className="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 shadow-sm text-sm text-gray-700">
+          {selectedIngredient?.name || <span className="italic text-gray-400">Ingrédient inconnu</span>}
+        </div>
+      </FormField>}
+      {!showLabels && (
+        <div className="w-full rounded-md border border-gray-300 bg-gray-100 px-3 py-2 shadow-sm text-sm text-gray-700">
+          {selectedIngredient?.name || <span className="italic text-gray-400">Ingrédient inconnu</span>}
+        </div>
+      )}
 
-      <div className="col-span-5">
-        <FormField 
-          label={showLabels ? "Quantité" : undefined}
-          required={showLabels}
-        >
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min="0"
-              step="any"
-              value={value.quantity}
-              onChange={(e) => onChange({ 
-                ...value,
-                quantity: parseFloat(e.target.value) || 0
-              })}
-            />
-            {selectedIngredient && (
-              <span className="text-gray-500 whitespace-nowrap">
-                {UNIT_LABELS[selectedIngredient.unit]}
-              </span>
+      {showLabels && <FormField label="Quantité">
+        <div className="flex items-center gap-2">
+          <Input
+            label="Quantité"
+            type="number"
+            min="0"
+            step="any"
+            value={value.quantity || ''}
+            className={clsx(
+              'transition-all duration-300',
+              highlighted && 'ring-2 ring-red-500 border-red-500 animate-pulse'
             )}
-          </div>
-        </FormField>
-      </div>
+            onChange={(e) => onChange({ 
+              ...value,
+              quantity: parseFloat(e.target.value) || 0
+            })}
+          />
+          {selectedIngredient && (
+            <span className="whitespace-nowrap text-sm text-gray-500">
+              {UNIT_LABELS[selectedIngredient.unit]}
+            </span>
+          )}
+        </div>
+      </FormField>}
+      {!showLabels && (
+        <div className="flex items-center gap-2">
+          <Input
+            label="Quantité"
+            type="number"
+            min="0"
+            step="any"
+            value={value.quantity || ''}
+            className={clsx(
+              'transition-all duration-300',
+              highlighted && 'ring-2 ring-red-500 border-red-500 animate-pulse'
+            )}
+            onChange={(e) => onChange({ 
+              ...value,
+              quantity: parseFloat(e.target.value) || 0
+            })}
+          />
+          {selectedIngredient && (
+            <span className="whitespace-nowrap text-sm text-gray-500">
+              {UNIT_LABELS[selectedIngredient.unit]}
+            </span>
+          )}
+        </div>
+      )}
 
-      <div className="col-span-2">
-        <Button
-          variant="danger"
-          onClick={onDelete}
-          icon={<Trash2 className="h-4 w-4" />}
-          className="w-full"
-        />
-      </div>
+      <button
+        type="button"
+        onClick={onDelete}
+        className="text-red-500 hover:text-red-700 transition-colors flex items-center justify-center h-8 w-8 mt-6"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
     </div>
   );
 }

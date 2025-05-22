@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import FormField from '../ui/FormField';
-import Input from '../ui/Input';
+import { Input } from '../ui/Input';
 import Button from '../ui/Button';
 
 type Ingredient = {
@@ -16,7 +16,7 @@ type ProductFormValue = {
   quantity: number;
   unit: string;
   price: number;
-  date: Date | string;
+  date: string;
 };
 
 type ProductFormRowProps = {
@@ -73,10 +73,17 @@ export default function ProductFormRow({
   }, [selectedIngredient]);
 
   const handleChange = (field: keyof ProductFormValue, newValue: string | number) => {
-    onChange({
-      ...value,
-      [field]: newValue
-    });
+    if (field === 'quantity') {
+      onChange({
+        ...value,
+        quantity: typeof newValue === 'string' ? parseFloat(newValue || '0') : newValue
+      });
+    } else {
+      onChange({
+        ...value,
+        [field]: newValue
+      });
+    }
   };
 
   return (
@@ -101,6 +108,7 @@ export default function ProductFormRow({
       <div className="col-span-2">
         <FormField label={showLabels ? "Libellé" : undefined}>
           <Input
+            label="Libellé"
             type="text"
             value={value.label || ''}
             onChange={(e) => handleChange('label', e.target.value)}
@@ -111,6 +119,7 @@ export default function ProductFormRow({
       <div className="col-span-2">
         <FormField label={showLabels ? "Quantité" : undefined} required={showLabels}>
           <Input
+            label="Quantité"
             type="number"
             min="0"
             step="any"
@@ -141,6 +150,7 @@ export default function ProductFormRow({
       <div className="col-span-2">
         <FormField label={showLabels ? "Prix (€)" : undefined} required={showLabels}>
           <Input
+            label="Prix"
             type="number"
             min="0"
             step="0.01"
@@ -153,9 +163,10 @@ export default function ProductFormRow({
       <div className="col-span-1">
         <FormField label={showLabels ? "Date" : undefined} required={showLabels}>
           <Input
+            label="Date"
             type="datetime-local"
-            value={typeof value.date === 'string' ? value.date : value.date.toISOString().slice(0, 16)}
-            onChange={(e) => handleChange('date', new Date(e.target.value))}
+            value={value.date}
+            onChange={(e) => handleChange('date', e.target.value)}
           />
         </FormField>
       </div>

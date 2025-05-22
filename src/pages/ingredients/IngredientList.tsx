@@ -16,6 +16,11 @@ type Ingredient = {
   unit: 'weight' | 'volume' | 'unit';
   organization_id: string;
   created_at: string;
+  category?: {
+    id: string;
+    name: string;
+    organization_id: string | null;
+  } | null;
   lastProduct?: {
     price_cents: number;
     quantity: number;
@@ -48,7 +53,16 @@ export default function IngredientList() {
       const { data, error: ingredientError } = await supabase
         .from('ingredient')
         .select(`
-          *,
+          id,
+          name,
+          unit,
+          organization_id,
+          created_at,
+          category:category_id (
+            id,
+            name,
+            organization_id
+          ),
           lastProduct:product(
             price_cents,
             quantity
@@ -87,7 +101,12 @@ export default function IngredientList() {
   };
 
   const handleEdit = (ingredient: Ingredient) => {
-    setSelectedIngredient(ingredient);
+    setSelectedIngredient({
+      id: ingredient.id,
+      name: ingredient.name,
+      unit: ingredient.unit,
+      category_id: ingredient.category?.id ?? null
+    });
     setIsModalOpen(true);
   };
 
@@ -182,6 +201,9 @@ export default function IngredientList() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Unité
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Catégorie
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Dernier prix
                 </th>
@@ -198,6 +220,18 @@ export default function IngredientList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {UNIT_LABELS[ingredient.unit]}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {ingredient.category ? (
+                      <>
+                        {ingredient.category.name}
+                        {ingredient.category.organization_id === null && (
+                          <span className="ml-2 text-sm text-gray-400">(globale)</span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {ingredient.lastProduct ? (

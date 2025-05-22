@@ -57,6 +57,12 @@ export default function Navbar() {
               >
                 Ingrédients
               </Link>
+              <Link
+                to="/test-back"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                Test Back
+              </Link>
             </Dropdown>
             <Button
               variant="outline"

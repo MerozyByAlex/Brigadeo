@@ -43,7 +43,9 @@ export default function RecipeList() {
           description,
           portions,
           restaurant_id,
-          restaurant:restaurant_id ( name )
+          restaurant:restaurant_id!inner (
+            name
+          )
         `)
         .eq('organization_id', profile.organization_id)
         .order('name');

@@ -12,7 +12,7 @@ type Restaurant = {
 };
 
 type UploadInvoiceFormProps = {
-  onSuccess?: (invoiceId: string) => void;
+  onSuccess?: (invoiceId: string, storagePath?: string) => void;
 };
 
 export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps) {
@@ -125,7 +125,7 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
           organization_id: profile.organization_id,
           restaurant_id: restaurantId,
           storage_path: uploadData.path,
-          date: new Date(date).toISOString(),
+          date,
           supplier: supplier.trim() || null
         }])
         .select()
@@ -144,7 +144,7 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
 
       // Callback de succès
       if (onSuccess) {
-        onSuccess(invoice.id);
+        onSuccess(invoice.id, invoice.storage_path);
       }
     } catch (err) {
       setError(
@@ -227,6 +227,7 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
       <FormField label="Date de la facture" error={dateError} required>
         <Input
           type="datetime-local"
+          label="Date de la facture"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
@@ -237,6 +238,7 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
       <FormField label="Fournisseur">
         <Input
           type="text"
+          label="Fournisseur"
           value={supplier}
           onChange={(e) => setSupplier(e.target.value)}
           disabled={loading}

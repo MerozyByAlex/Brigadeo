@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { CheckCircle, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
+import { useToast } from '../../hooks/useToast';
 import FormField from '../ui/FormField';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -21,6 +23,7 @@ export default function RestaurantForm({ initialData, onSuccess }: RestaurantFor
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState('');
   const [nameError, setNameError] = useState('');
+  const showToast = useToast();
   const hasChanged = useHasChanged(initialData?.name, name.trim());
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,6 +66,14 @@ export default function RestaurantForm({ initialData, onSuccess }: RestaurantFor
 
       if (error) throw error;
 
+      showToast({
+        text: initialData
+          ? "Restaurant mis à jour avec succès !"
+          : "Restaurant créé avec succès !",
+        color: 'success',
+        icon: <CheckCircle className="h-4 w-4" />
+      });
+
       if (!initialData) {
         setName('');
       }
@@ -75,6 +86,11 @@ export default function RestaurantForm({ initialData, onSuccess }: RestaurantFor
           : `Une erreur s'est produite lors de la ${initialData ? 'modification' : 'création'} du restaurant`
       );
       console.error(err);
+      showToast({
+        text: "Quelque chose s'est mal passé",
+        color: 'error',
+        icon: <X className="h-4 w-4" />
+      });
     } finally {
       setLoading(false);
     }
@@ -105,6 +121,12 @@ export default function RestaurantForm({ initialData, onSuccess }: RestaurantFor
 
       if (error) throw error;
 
+      showToast({
+        text: "Restaurant supprimé avec succès !",
+        color: 'success',
+        icon: <CheckCircle className="h-4 w-4" />
+      });
+
       onSuccess();
     } catch (err) {
       setGlobalError(
@@ -113,6 +135,11 @@ export default function RestaurantForm({ initialData, onSuccess }: RestaurantFor
           : "Une erreur s'est produite lors de la suppression du restaurant"
       );
       console.error(err);
+      showToast({
+        text: "Quelque chose s'est mal passé",
+        color: 'error',
+        icon: <X className="h-4 w-4" />
+      });
     } finally {
       setLoading(false);
     }

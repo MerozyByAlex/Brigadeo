@@ -8,11 +8,11 @@ import Button from '../ui/Button';
 type ProductDetailProps = {
   product: {
     id: string;
-    ingredient?: {
+    ingredient: {
       id: string;
       name: string;
       unit: 'weight' | 'volume' | 'unit';
-    } | null;
+    };
     raw_label?: string | null;
     quantity: number;
     price_cents: number;
@@ -43,9 +43,11 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
     try {
       setLoadingInvoice(true);
-      const { data: { signedUrl }, error } = await supabase.storage
-        .from('invoices')
-        .createSignedUrl(product.storage_path, 3600);
+      const { data, error } = await supabase.storage
+  .from('invoices')
+  .createSignedUrl(product.storage_path, 3600);
+
+const signedUrl = data?.signedUrl;
 
       if (error || !signedUrl) throw error || new Error("URL non générée");
       window.open(signedUrl, '_blank');
