@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { Input } from '../ui/Input';
 
 
+
 type Category = {
   id: string;
   name: string;

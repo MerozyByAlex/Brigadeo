@@ -1,11 +1,29 @@
-import { postToBackend } from './backend';
+import { getSessionToken } from '../utils/auth';
 
 export async function analyzeInvoice(storagePath: string, organization_id: string): Promise<any[]> {
   try {
-    const response = await postToBackend('/analyze-invoice', { storagePath, organization_id });
+    const { VITE_EDGE_FUNCTION_URL } = import.meta.env;
+    const token = await getSessionToken();
+    
+    const response = await fetch(`${VITE_EDGE_FUNCTION_URL}/analyze-invoice`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ storagePath, organization_id }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to analyze invoice');
+    }
+    
+    // Parse la réponse JSON
+    const data = await response.json();
     
     // Récupération du champ analysis
-    const { analysis } = response;
+    const { analysis } = data;
     if (!analysis) {
       throw new Error('Réponse invalide : champ analysis manquant');
     }
