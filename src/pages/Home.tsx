@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getCurrentProfile } from '../utils/auth';
 import Button from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 

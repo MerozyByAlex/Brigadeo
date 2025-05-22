@@ -1,13 +1,12 @@
 import { STRIPE_PRODUCTS } from '../stripe-config';
-import { getSessionToken } from '../utils/auth';
+import { supabase } from '../lib/supabase';
 
 export async function createCheckoutSession(priceId: string, mode: 'payment' | 'subscription') {
   const { VITE_EDGE_FUNCTION_URL } = import.meta.env;
-  const token = await getSessionToken();
-  const profile = await getCurrentProfile();
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-  if (!profile.organization_id) {
-    throw new Error('Vous devez être membre d\'une organisation pour souscrire à un abonnement');
+  if (sessionError || !session?.access_token) {
+    throw new Error('Non authentifié');
   }
 
   const endpoint = `${VITE_EDGE_FUNCTION_URL}/stripe-checkout`;
@@ -16,7 +15,7 @@ export async function createCheckoutSession(priceId: string, mode: 'payment' | '
     endpoint,
     price_id: priceId,
     mode,
-    token,
+    token: session.access_token,
     success_url: `${window.location.origin}/success`,
     cancel_url: `${window.location.origin}/cancel`,
   });
@@ -25,12 +24,11 @@ export async function createCheckoutSession(priceId: string, mode: 'payment' | '
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({
       price_id: priceId,
       mode,
-      organization_id: profile.organization_id,
       success_url: `${window.location.origin}/success`,
       cancel_url: `${window.location.origin}/cancel`,
     }),

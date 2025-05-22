@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import Dropdown from './ui/Dropdown';
@@ -41,6 +41,7 @@ export default function Navbar() {
             {hasSubscription ? 'Brigadéo Pro' : 'Brigadéo'}
           </Link>
           <div className="flex items-center gap-4">
+            
             <Link
               to="/produits/saisie"
               className="text-gray-700 hover:text-gray-900"
@@ -93,6 +94,12 @@ export default function Navbar() {
             >
               Déconnexion
             </Button>
+            <Link
+              to="/compte"
+              className="text-gray-700 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <User className="h-5 w-5" />
+            </Link>
           </div>
         </div>
       </div>

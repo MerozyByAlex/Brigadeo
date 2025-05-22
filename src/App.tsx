@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import InvoiceList from './pages/invoices/InvoiceList';
 import IngredientList from './pages/ingredients/IngredientList';
+import AccountPage from './pages/account/AccountPage';
 import RestaurantList from './pages/restaurants/RestaurantList';
 import RecipeList from './pages/recipes/RecipeList';
 
@@ -41,6 +42,11 @@ function App() {
             <Route path="ingredients" element={
               <PrivateRoute>
                 <IngredientList />
+              </PrivateRoute>
+            } />
+            <Route path="compte" element={
+              <PrivateRoute>
+                <AccountPage />
               </PrivateRoute>
             } />
             <Route path="recipes" element={
