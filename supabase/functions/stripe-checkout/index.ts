@@ -3,7 +3,7 @@ import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
 
 const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
+const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 const stripe = new Stripe(stripeSecret, {
   appInfo: {
     name: 'Bolt Integration',
@@ -71,7 +71,18 @@ Deno.serve(async (req) => {
     }
 
     if (!user) {
-      return corsResponse({ error: 'User not found' }, 404);
+      return corsResponse({ error: 'Utilisateur non trouvé' }, 404);
+    }
+
+    // Récupération de l'organisation de l'utilisateur
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || !profile?.organization_id) {
+      return corsResponse({ error: 'Organisation non trouvée' }, 404);
     }
 
     const { data: customer, error: getCustomerError } = await supabase
@@ -105,6 +116,7 @@ Deno.serve(async (req) => {
       const { error: createCustomerError } = await supabase.from('stripe_customers').insert({
         user_id: user.id,
         customer_id: newCustomer.id,
+        organization_id: profile.organization_id
       });
 
       if (createCustomerError) {
@@ -124,6 +136,7 @@ Deno.serve(async (req) => {
       if (mode === 'subscription') {
         const { error: createSubscriptionError } = await supabase.from('stripe_subscriptions').insert({
           customer_id: newCustomer.id,
+          organization_id: profile.organization_id,
           status: 'not_started',
         });
 
@@ -164,6 +177,7 @@ Deno.serve(async (req) => {
         if (!subscription) {
           // Create subscription record for existing customer if missing
           const { error: createSubscriptionError } = await supabase.from('stripe_subscriptions').insert({
+            organization_id: profile.organization_id,
             customer_id: customerId,
             status: 'not_started',
           });

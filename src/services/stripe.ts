@@ -4,6 +4,11 @@ import { getSessionToken } from '../utils/auth';
 export async function createCheckoutSession(priceId: string, mode: 'payment' | 'subscription') {
   const { VITE_EDGE_FUNCTION_URL } = import.meta.env;
   const token = await getSessionToken();
+  const profile = await getCurrentProfile();
+
+  if (!profile.organization_id) {
+    throw new Error('Vous devez être membre d\'une organisation pour souscrire à un abonnement');
+  }
 
   const endpoint = `${VITE_EDGE_FUNCTION_URL}/stripe-checkout`;
 
@@ -25,6 +30,7 @@ export async function createCheckoutSession(priceId: string, mode: 'payment' | '
     body: JSON.stringify({
       price_id: priceId,
       mode,
+      organization_id: profile.organization_id,
       success_url: `${window.location.origin}/success`,
       cancel_url: `${window.location.origin}/cancel`,
     }),

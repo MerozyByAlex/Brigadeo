@@ -12,21 +12,13 @@ export default function Home() {
   useEffect(() => {
     const checkSubscription = async () => {
       try {
-        const profile = await getCurrentProfile();
-        
-        if (!profile.organization_id) {
-          setHasSubscription(false);
-          return;
-        }
-
         const { data, error } = await supabase
-          .from('organization_subscription')
-          .select('is_active')
-          .eq('organization_id', profile.organization_id)
+          .from('stripe_organization_subscriptions')
+          .select('subscription_status')
           .maybeSingle();
 
         if (error) throw error;
-        setHasSubscription(data ? data.is_active || false : false);
+        setHasSubscription(data?.subscription_status === 'active');
       } catch (err) {
         console.error(err);
         setHasSubscription(false);
@@ -40,7 +32,7 @@ export default function Home() {
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-8">
-          Bienvenue sur Brigadéo
+          Bienvenue sur {hasSubscription ? 'Brigadéo Pro' : 'Brigadéo'}
         </h1>
         <p className="text-xl text-gray-600">
           La solution intelligente pour la gestion de vos factures de restaurant
@@ -51,7 +43,7 @@ export default function Home() {
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 shadow-sm border border-blue-100">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              Passez à BrigadIA PRO
+              Passez votre organisation à BrigadIA PRO
             </h2>
             <p className="text-gray-600 mb-8">
               Débloquez toutes les fonctionnalités avancées et optimisez la gestion de vos restaurants avec l'analyse automatique de factures par IA.

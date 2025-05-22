@@ -1,11 +1,32 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import Dropdown from './ui/Dropdown';
 import Button from './ui/Button';
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const [hasSubscription, setHasSubscription] = useState(false);
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('stripe_organization_subscriptions')
+          .select('subscription_status')
+          .maybeSingle();
+
+        if (error) throw error;
+        setHasSubscription(data?.subscription_status === 'active');
+      } catch (err) {
+        console.error(err);
+        setHasSubscription(false);
+      }
+    };
+
+    checkSubscription();
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -17,7 +38,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="text-xl font-bold text-gray-800">
-            Brigadéo
+            {hasSubscription ? 'Brigadéo Pro' : 'Brigadéo'}
           </Link>
           <div className="flex items-center gap-4">
             <Link
