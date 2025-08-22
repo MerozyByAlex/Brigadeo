@@ -43,7 +43,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             
             <Link
-              to="/produits/saisie"
+              to="/products/input"
               className="text-gray-700 hover:text-gray-900"
             >
               Saisir des produits
@@ -56,19 +56,19 @@ export default function Navbar() {
                 Restaurants
               </Link>
               <Link
-                to="/factures"
+                to="/invoices"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 Factures
               </Link>
               <Link
-                to="/recettes"
+                to="/recipes"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 Recettes
               </Link>
               <Link
-                to="/produits"
+                to="/products"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 Produits
@@ -78,12 +78,6 @@ export default function Navbar() {
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 Ingrédients
-              </Link>
-              <Link
-                to="/test-back"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Test Back
               </Link>
             </Dropdown>
             <Button
