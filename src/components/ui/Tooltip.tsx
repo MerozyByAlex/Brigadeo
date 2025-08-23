@@ -1,58 +1,84 @@
-import { useState, ReactNode } from 'react';
-import clsx from 'clsx';
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type TooltipProps = {
   content: string;
-  children: ReactNode;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  children: React.ReactNode;
+  offset?: number; // distance en px
 };
 
-export default function Tooltip({ content, children, position = 'top' }: TooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
+export default function Tooltip({ content, children, offset = 8 }: TooltipProps) {
+  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState<{ top: number; left: number; placement: "top" | "bottom" }>({
+    top: 0,
+    left: 0,
+    placement: "top",
+  });
 
-  const positionClasses = {
-    top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
-    bottom: 'top-full left-1/2 transform -translate-x-1/2 mt-2',
-    left: 'right-full top-1/2 transform -translate-y-1/2 mr-2',
-    right: 'left-full top-1/2 transform -translate-y-1/2 ml-2'
+  const compute = () => {
+    const el = triggerRef.current;
+    if (!el) return;
+
+    const r = el.getBoundingClientRect();
+    const centerX = r.left + r.width / 2;
+
+    // Position par défaut : au-dessus
+    let top = r.top - offset;
+    let placement: "top" | "bottom" = "top";
+
+    // Si pas assez de place en haut, affiche en dessous
+    if (top < 8) {
+      top = r.bottom + offset;
+      placement = "bottom";
+    }
+
+    setCoords({ top, left: centerX, placement });
   };
 
-  const arrowClasses = {
-    top: 'top-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-800',
-    bottom: 'bottom-full left-1/2 transform -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
-    left: 'left-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-800',
-    right: 'right-full top-1/2 transform -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-800'
-  };
+  useEffect(() => {
+    if (!open) return;
+    compute();
+    const onScroll = () => compute();
+    const onResize = () => compute();
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   return (
-    <div 
-      className="relative inline-block"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-      onFocus={() => setIsVisible(true)}
-      onBlur={() => setIsVisible(false)}
+    <span
+      ref={triggerRef}
+      className="inline-flex items-center"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+      tabIndex={0}
     >
       {children}
-      
-      {isVisible && (
-        <div
-          role="tooltip"
-          className={clsx(
-            'absolute z-50 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg',
-            'transition-opacity duration-200 opacity-100',
-            'max-w-xs whitespace-normal break-words',
-            positionClasses[position]
-          )}
-        >
-          {content}
+      {open &&
+        createPortal(
           <div
-            className={clsx(
-              'absolute w-0 h-0 border-4',
-              arrowClasses[position]
-            )}
-          />
-        </div>
-      )}
-    </div>
+            role="tooltip"
+            className="pointer-events-none fixed z-[9999] max-w-xs rounded bg-gray-800 px-2 py-1 text-xs text-white shadow-lg transition-opacity duration-100"
+            style={{
+              top: coords.top,
+              left: coords.left,
+              transform:
+                coords.placement === "top"
+                  ? "translate(-50%, -100%)"
+                  : "translate(-50%, 0%)",
+            }}
+          >
+            {content}
+          </div>,
+          document.body
+        )}
+    </span>
   );
 }
