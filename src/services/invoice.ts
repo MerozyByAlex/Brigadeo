@@ -18,7 +18,7 @@ export type InvoiceHeader = {
 export type InvoiceLine = {
   id: string;
   quantity: number;
-  unit: string;
+  unit?: string | null;
   unit_price_excl_cents: number;
   total_excl_cents: number;
   total_vat_cents: number;
@@ -53,14 +53,24 @@ export async function getInvoiceById(id: string): Promise<InvoiceHeader> {
 }
 
 export async function getInvoiceLines(invoiceId: string): Promise<InvoiceLine[]> {
-  const { data, error } = await supabase
-    .from('invoice_line')
-    .select('id, quantity, unit, unit_price_excl_cents, total_excl_cents, total_vat_cents')
-    .eq('invoice_id', invoiceId)
-    .order('id');
+  try {
+    const { data, error } = await supabase
+      .from('invoice_line')
+      .select('id, quantity, unit, unit_price_excl_cents, total_excl_cents, total_vat_cents')
+      .eq('invoice_id', invoiceId)
+      .order('id');
 
-  if (error) throw error;
-  return data || [];
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    if (
+      error?.code === '42703' ||
+      error?.message?.includes('column invoice_line.unit does not exist')
+    ) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function analyzeInvoice(storagePath: string, organization_id: string): Promise<any[]> {
