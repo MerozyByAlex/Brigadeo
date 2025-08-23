@@ -11,7 +11,7 @@ import UploadInvoiceForm from './UploadInvoiceForm';
 
 type Invoice = {
   id: string;
-  date: string;
+  invoice_date: string;
   storage_path: string;
   supplier: string | null;
   restaurant: {
@@ -44,7 +44,7 @@ export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: Select
         .from('invoice')
         .select(`
           id,
-          date,
+          invoice_date,
           storage_path,
           supplier,
           restaurant:restaurant_id!inner (
@@ -52,7 +52,7 @@ export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: Select
           )
         `)
         .eq('organization_id', profile.organization_id)
-        .order('date', { ascending: false });
+        .order('invoice_date', { ascending: false });
 
       if (fetchError) throw fetchError;
 
@@ -165,7 +165,7 @@ export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: Select
                           Restaurant : {invoice.restaurant?.name || '—'}
                         </p>
                         <p className="text-sm text-gray-500">
-                          Date : {formatDate(invoice.date)}
+                          Date : {formatDate(invoice.invoice_date)}
                         </p>
                         {invoice.supplier && (
                           <p className="text-sm text-gray-500">
