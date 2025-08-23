@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { Eye, Plus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
 import { formatDate } from '../../utils/date';
 import Button from '../../components/ui/Button';
 import InvoiceDetailModal from '../../components/invoices/InvoiceDetailModal';
+import InvoiceCreateModal from '../../components/invoices/InvoiceCreateModal';
 
 type Invoice = {
   id: string;
@@ -62,6 +63,7 @@ export default function InvoiceListPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const fetchInvoices = async () => {
     try {
@@ -159,6 +161,12 @@ export default function InvoiceListPage() {
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Mes factures</h1>
 
+        <Button
+          icon={<Plus className="h-4 w-4" />}
+          onClick={() => setShowCreate(true)}
+        >
+          Ajouter une facture
+        </Button>
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -225,6 +233,12 @@ export default function InvoiceListPage() {
           </tbody>
         </table>
       </div>
+
+      <InvoiceCreateModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={fetchInvoices}
+      />
 
       <InvoiceDetailModal
         invoiceId={invoiceId ?? ''}

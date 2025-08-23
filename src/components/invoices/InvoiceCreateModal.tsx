@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle, X, ArrowLeft, Save } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { CheckCircle, X, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
 import { useToast } from '../../hooks/useToast';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-import FormField from '../../components/ui/FormField';
+import Modal from '../ui/Modal';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import FormField from '../ui/FormField';
+
+type InvoiceCreateModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreated?: () => void;
+};
 
 type Restaurant = {
   id: string;
@@ -37,11 +43,13 @@ const toCents = (value: string): number => {
 };
 
 const formatEuro = (cents: number): string => {
-  return (cents / 100).toFixed(2);
+  return new Intl.NumberFormat('fr-FR', { 
+    style: 'currency', 
+    currency: 'EUR' 
+  }).format(cents / 100);
 };
 
-export default function InvoiceCreatePage() {
-  const navigate = useNavigate();
+export default function InvoiceCreateModal({ isOpen, onClose, onCreated }: InvoiceCreateModalProps) {
   const showToast = useToast();
   
   // Form state
@@ -64,6 +72,8 @@ export default function InvoiceCreatePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const fetchData = async () => {
       try {
         const profile = await getCurrentProfile();
@@ -113,7 +123,25 @@ export default function InvoiceCreatePage() {
     };
 
     fetchData();
-  }, []);
+  }, [isOpen]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setInvoiceNumber('');
+      setInvoiceDate(new Date().toISOString().slice(0, 16));
+      setRestaurantId('');
+      setSupplierId('');
+      setSubtotalExcl('');
+      setTotalVat('');
+      setTotalIncl('');
+      setPaymentMethod('card');
+      setStatus('imported');
+      setNotes('');
+      setError('');
+      setLoading(true);
+    }
+  }, [isOpen]);
 
   const validateForm = (): string | null => {
     if (!invoiceDate) {
@@ -144,7 +172,7 @@ export default function InvoiceCreatePage() {
     return null;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -191,7 +219,8 @@ export default function InvoiceCreatePage() {
         icon: <CheckCircle className="h-4 w-4" />
       });
 
-      navigate('/invoices');
+      onCreated?.();
+      onClose();
     } catch (err) {
       setError(
         err instanceof Error
@@ -209,37 +238,22 @@ export default function InvoiceCreatePage() {
     }
   };
 
-  const formatEuro = (cents: number | null): string => {
-    if (cents === null) return '—';
-    return new Intl.NumberFormat('fr-FR', { 
-      style: 'currency', 
-      currency: 'EUR' 
-    }).format(cents / 100);
-  };
-
   if (loading) {
-    return <div className="text-center">Chargement...</div>;
+    return (
+      <Modal isOpen={isOpen} onClose={onClose} title="Nouvelle facture" size="lg">
+        <div className="text-center py-4">Chargement...</div>
+      </Modal>
+    );
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/invoices')}
-          icon={<ArrowLeft className="h-4 w-4" />}
-        >
-          Retour
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">Nouvelle facture</h1>
-      </div>
-
+    <Modal isOpen={isOpen} onClose={onClose} title="Nouvelle facture" size="lg">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Section Informations générales */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Informations générales
-          </h2>
+          </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField label="Numéro de facture">
@@ -297,10 +311,10 @@ export default function InvoiceCreatePage() {
         </div>
 
         {/* Section Montants */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Montants
-          </h2>
+          </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <FormField label="Sous-total HT (€)">
@@ -349,10 +363,10 @@ export default function InvoiceCreatePage() {
         </div>
 
         {/* Section Options */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900 border-b pb-2">
+        <div className="space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
             Options
-          </h2>
+          </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField label="Moyen de paiement">
@@ -396,13 +410,12 @@ export default function InvoiceCreatePage() {
         </div>
 
         {/* Boutons d'action */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 pt-4">
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate('/invoices')}
+            onClick={onClose}
             disabled={submitting}
-            icon={<ArrowLeft className="h-4 w-4" />}
             className="flex-1"
           >
             Annuler
@@ -427,6 +440,6 @@ export default function InvoiceCreatePage() {
           </div>
         )}
       </form>
-    </div>
+    </Modal>
   );
 }
