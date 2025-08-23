@@ -72,6 +72,7 @@ ALTER TABLE organization_modules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscription_logs ENABLE ROW LEVEL SECURITY;
 
 -- Politiques RLS pour organization_subscription
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire leur abonnement" ON organization_subscription;
 CREATE POLICY "Les utilisateurs peuvent lire leur abonnement"
   ON organization_subscription
   FOR SELECT
@@ -85,6 +86,7 @@ CREATE POLICY "Les utilisateurs peuvent lire leur abonnement"
   );
 
 -- Politiques RLS pour subscription_modules
+DROP POLICY IF EXISTS "Tout le monde peut lire les modules actifs" ON subscription_modules;
 CREATE POLICY "Tout le monde peut lire les modules actifs"
   ON subscription_modules
   FOR SELECT
@@ -92,6 +94,7 @@ CREATE POLICY "Tout le monde peut lire les modules actifs"
   USING (is_active = true);
 
 -- Politiques RLS pour organization_modules
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire leurs modules" ON organization_modules;
 CREATE POLICY "Les utilisateurs peuvent lire leurs modules"
   ON organization_modules
   FOR SELECT
@@ -105,6 +108,7 @@ CREATE POLICY "Les utilisateurs peuvent lire leurs modules"
   );
 
 -- Politiques RLS pour subscription_logs
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire leurs logs d'abonnement" ON subscription_logs;
 CREATE POLICY "Les utilisateurs peuvent lire leurs logs d'abonnement"
   ON subscription_logs
   FOR SELECT

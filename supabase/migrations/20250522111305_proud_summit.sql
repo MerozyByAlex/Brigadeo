@@ -53,6 +53,7 @@ AND s.deleted_at IS NULL;
 -- Mise à jour des politiques RLS
 DROP POLICY IF EXISTS "Users can view their own subscription data" ON stripe_subscriptions;
 
+DROP POLICY IF EXISTS "Users can view their organization subscription data" ON stripe_subscriptions;
 CREATE POLICY "Users can view their organization subscription data"
     ON stripe_subscriptions
     FOR SELECT

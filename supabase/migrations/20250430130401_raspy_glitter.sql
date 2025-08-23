@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS recipes (
 ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
 
 -- Politiques pour recipes
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les recettes de leur organisation" ON recipes;
 CREATE POLICY "Les utilisateurs peuvent lire les recettes de leur organisation"
   ON recipes
   FOR SELECT
@@ -56,6 +57,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les recettes de leur organisation"
     )
   );
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer les recettes de leur organisation" ON recipes;
 CREATE POLICY "Les utilisateurs peuvent gérer les recettes de leur organisation"
   ON recipes
   FOR ALL
@@ -96,6 +98,7 @@ CREATE TABLE IF NOT EXISTS recipe_ingredients (
 ALTER TABLE recipe_ingredients ENABLE ROW LEVEL SECURITY;
 
 -- Politiques pour recipe_ingredients
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les ingrédients des recettes de leur organisation" ON recipe_ingredients;
 CREATE POLICY "Les utilisateurs peuvent lire les ingrédients des recettes de leur organisation"
   ON recipe_ingredients
   FOR SELECT
@@ -116,6 +119,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les ingrédients des recettes de le
     )
   );
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer les ingrédients des recettes de leur organisation" ON recipe_ingredients;
 CREATE POLICY "Les utilisateurs peuvent gérer les ingrédients des recettes de leur organisation"
   ON recipe_ingredients
   FOR ALL

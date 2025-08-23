@@ -51,6 +51,7 @@ CREATE INDEX IF NOT EXISTS invoice_line_ingredient_match_id_idx ON public.invoic
 
 ALTER TABLE public.invoice_line ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can read invoice lines of their organization" ON public.invoice_line;
 CREATE POLICY "Users can read invoice lines of their organization"
   ON public.invoice_line
   FOR SELECT

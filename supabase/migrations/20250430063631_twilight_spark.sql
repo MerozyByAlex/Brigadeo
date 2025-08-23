@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS restaurant (
 ALTER TABLE restaurant ENABLE ROW LEVEL SECURITY;
 
 -- Les utilisateurs authentifiés peuvent lire tous les restaurants
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire tous les restaurants" ON restaurant;
 CREATE POLICY "Les utilisateurs peuvent lire tous les restaurants"
   ON restaurant
   FOR SELECT
@@ -35,6 +36,7 @@ CREATE POLICY "Les utilisateurs peuvent lire tous les restaurants"
   USING (true);
 
 -- Les utilisateurs peuvent uniquement modifier leurs propres restaurants
+DROP POLICY IF EXISTS "Les utilisateurs peuvent modifier leurs propres restaurants" ON restaurant;
 CREATE POLICY "Les utilisateurs peuvent modifier leurs propres restaurants"
   ON restaurant
   FOR ALL

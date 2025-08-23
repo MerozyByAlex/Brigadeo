@@ -45,6 +45,7 @@ CREATE INDEX IF NOT EXISTS supplier_org_name_idx ON supplier (organization_id, n
 ALTER TABLE supplier ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for supplier table
+DROP POLICY IF EXISTS "Users can manage suppliers in their organization" ON supplier;
 CREATE POLICY "Users can manage suppliers in their organization"
   ON supplier
   FOR ALL
@@ -60,6 +61,7 @@ CREATE POLICY "Users can manage suppliers in their organization"
     WHERE profiles.user_id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "Users can read suppliers in their organization" ON supplier;
 CREATE POLICY "Users can read suppliers in their organization"
   ON supplier
   FOR SELECT

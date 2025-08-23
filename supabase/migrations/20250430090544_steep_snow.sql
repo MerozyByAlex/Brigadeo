@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS product (
 ALTER TABLE product ENABLE ROW LEVEL SECURITY;
 
 -- Politique de lecture
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les produits de leur organisation" ON product;
 CREATE POLICY "Les utilisateurs peuvent lire les produits de leur organisation"
   ON product
   FOR SELECT
@@ -50,6 +51,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les produits de leur organisation"
   );
 
 -- Politique d'écriture
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer les produits de leur organisation" ON product;
 CREATE POLICY "Les utilisateurs peuvent gérer les produits de leur organisation"
   ON product
   FOR ALL
