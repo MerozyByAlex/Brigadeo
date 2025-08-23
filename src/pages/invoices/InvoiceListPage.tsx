@@ -148,14 +148,16 @@ export default function InvoiceListPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Mes factures</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Mes factures</h1>
 
-      <Button
-        icon={<Plus className="h-4 w-4" />}
-        onClick={() => setShowCreate(true)}
-      >
-        Ajouter une facture
-      </Button>
+        <Button
+          icon={<Plus className="h-4 w-4" />}
+          onClick={() => setShowCreate(true)}
+        >
+          Ajouter une facture
+        </Button>
+      </div>
 
       {invoices.length === 0 ? (
         <div className="text-center text-gray-500 mt-8">
