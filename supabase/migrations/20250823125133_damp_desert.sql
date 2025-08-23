@@ -1,3 +1,4 @@
+-- Corrects foreign key reference: ingredient_match_id now points to public.ingredient.
 /*
   # Create invoice_line table
 
@@ -15,7 +16,7 @@
       - `vat_rate` (numeric, >= 0)
       - `vat_amount_cents` (integer, >= 0)
       - `category_hint` (text, optional)
-      - `ingredient_match_id` (uuid, foreign key to ingredient_match)
+      - `ingredient_match_id` (uuid, foreign key to ingredient)
       - `confidence` (numeric, 0-1)
       - `created_at` (timestamptz)
 
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS public.invoice_line (
   vat_rate numeric NOT NULL CHECK (vat_rate >= 0),
   vat_amount_cents integer NOT NULL CHECK (vat_amount_cents >= 0),
   category_hint text,
-  ingredient_match_id uuid REFERENCES public.ingredient_match(id),
+  ingredient_match_id uuid REFERENCES public.ingredient(id),
   confidence numeric NOT NULL CHECK (confidence >= 0 AND confidence <= 1),
   created_at timestamptz NOT NULL DEFAULT now()
 );
