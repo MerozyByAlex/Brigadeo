@@ -16,12 +16,14 @@
 
 -- Fix unit_base_qty column type and constraints
 ALTER TABLE public.invoice_line
+  DROP CONSTRAINT IF EXISTS invoice_line_unit_base_qty_check,
   ALTER COLUMN unit_base_qty TYPE int USING CEIL(unit_base_qty),
   ALTER COLUMN unit_base_qty SET NOT NULL,
   ADD CONSTRAINT invoice_line_unit_base_qty_check CHECK (unit_base_qty > 0);
 
 -- Fix confidence column to allow NULL values
 ALTER TABLE public.invoice_line
+  DROP CONSTRAINT IF EXISTS invoice_line_confidence_check,
   ALTER COLUMN confidence DROP NOT NULL,
   ADD CONSTRAINT invoice_line_confidence_check
     CHECK (confidence BETWEEN 0 AND 1 OR confidence IS NULL);
