@@ -130,21 +130,6 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="isForeign" className="text-sm font-medium text-gray-700">
-            Fournisseur à l'étranger
-          </label>
-        </div>
-      </FormField>
-
-      <FormField label="Nom du fournisseur" error={nameError} required>
-        <Input
-          name="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-      </FormField>
-
       <FormField label="SIRET">
         <Input
           type="text"
@@ -152,6 +137,21 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
           onChange={(e) => setSiret(e.target.value)}
           placeholder="Numéro SIRET (optionnel)"
         />
+      </FormField>
+
+      <FormField>
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="isForeign"
+            checked={isForeign}
+            onChange={(e) => setIsForeign(e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="isForeign" className="text-sm font-medium text-gray-700">
+            Fournisseur à l'étranger
+          </label>
+        </div>
       </FormField>
 
       {isForeign && (
