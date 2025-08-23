@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
@@ -56,10 +57,11 @@ const getStatusColor = (status: string) => {
 };
 
 export default function InvoiceListPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const invoiceId = searchParams.get('invoiceId');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
   const fetchInvoices = async () => {
     try {
@@ -126,12 +128,12 @@ export default function InvoiceListPage() {
     fetchInvoices();
   }, []);
 
-  const openDetail = (invoiceId: string) => {
-    setSelectedInvoiceId(invoiceId);
+  const openDetail = (id: string) => {
+    setSearchParams({ invoiceId: id });
   };
 
   const closeDetail = () => {
-    setSelectedInvoiceId(null);
+    setSearchParams({});
   };
 
   if (loading) {
@@ -225,8 +227,8 @@ export default function InvoiceListPage() {
       </div>
 
       <InvoiceDetailModal
-        invoiceId={selectedInvoiceId || ''}
-        isOpen={!!selectedInvoiceId}
+        invoiceId={invoiceId ?? ''}
+        isOpen={Boolean(invoiceId)}
         onClose={closeDetail}
       />
     </div>
