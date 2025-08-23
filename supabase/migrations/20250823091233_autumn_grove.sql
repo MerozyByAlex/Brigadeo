@@ -94,5 +94,13 @@ BEGIN
   END IF;
 END $$;
 
--- Create useful index on invoice
-CREATE INDEX IF NOT EXISTS invoice_org_date_idx ON invoice (organization_id, date);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'invoice' AND column_name = 'date'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS invoice_org_date_idx
+      ON invoice (organization_id, date);
+  END IF;
+END $$;
