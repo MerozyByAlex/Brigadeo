@@ -172,16 +172,10 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
                 />
               </div>
             </div>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <HelpCircle 
-                  className="h-4 w-4 text-gray-400" 
-                  title="Le numéro de TVA officiel de ton fournisseur dans l'UE (ex : FR…)."
-                />
-              </div>
-            </div>
             <p className="text-xs text-gray-500">
               Si hors UE, laisse vide.
             </p>
+          </div>
           </div>
         </FormField>
       )}
