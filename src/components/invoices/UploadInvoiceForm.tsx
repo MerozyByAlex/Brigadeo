@@ -227,7 +227,6 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
       <FormField label="Date de la facture" error={dateError} required>
         <Input
           type="datetime-local"
-          label="Date de la facture"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
@@ -238,7 +237,6 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
       <FormField label="Fournisseur">
         <Input
           type="text"
-          label="Fournisseur"
           value={supplier}
           onChange={(e) => setSupplier(e.target.value)}
           disabled={loading}
