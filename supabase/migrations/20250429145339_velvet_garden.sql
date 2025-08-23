@@ -29,12 +29,14 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire leur propre profil" ON profiles;
 CREATE POLICY "Les utilisateurs peuvent lire leur propre profil"
   ON profiles
   FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent modifier leur propre profil" ON profiles;
 CREATE POLICY "Les utilisateurs peuvent modifier leur propre profil"
   ON profiles
   FOR UPDATE

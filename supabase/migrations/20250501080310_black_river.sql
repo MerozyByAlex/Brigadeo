@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS invoice (
 ALTER TABLE invoice ENABLE ROW LEVEL SECURITY;
 
 -- Politique de lecture
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les factures de leur organisation" ON invoice;
 CREATE POLICY "Les utilisateurs peuvent lire les factures de leur organisation"
   ON invoice
   FOR SELECT
@@ -53,6 +54,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les factures de leur organisation"
   );
 
 -- Politique d'écriture
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer les factures de leur organisation" ON invoice;
 CREATE POLICY "Les utilisateurs peuvent gérer les factures de leur organisation"
   ON invoice
   FOR ALL
@@ -73,6 +75,7 @@ CREATE POLICY "Les utilisateurs peuvent gérer les factures de leur organisation
   );
 
 -- Politiques de stockage pour le bucket invoices
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire leurs factures" ON storage.objects;
 CREATE POLICY "Les utilisateurs peuvent lire leurs factures"
   ON storage.objects
   FOR SELECT
@@ -86,6 +89,7 @@ CREATE POLICY "Les utilisateurs peuvent lire leurs factures"
     )
   );
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent uploader leurs factures" ON storage.objects;
 CREATE POLICY "Les utilisateurs peuvent uploader leurs factures"
   ON storage.objects
   FOR INSERT
@@ -99,6 +103,7 @@ CREATE POLICY "Les utilisateurs peuvent uploader leurs factures"
     )
   );
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent supprimer leurs factures" ON storage.objects;
 CREATE POLICY "Les utilisateurs peuvent supprimer leurs factures"
   ON storage.objects
   FOR DELETE

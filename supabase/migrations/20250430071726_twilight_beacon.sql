@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS ingredient (
 ALTER TABLE ingredient ENABLE ROW LEVEL SECURITY;
 
 -- Politique de lecture
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les ingrédients de leurs restaurants" ON ingredient;
 CREATE POLICY "Les utilisateurs peuvent lire les ingrédients de leurs restaurants"
   ON ingredient
   FOR SELECT
@@ -46,6 +47,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les ingrédients de leurs restauran
   );
 
 -- Politique d'écriture
+DROP POLICY IF EXISTS "Les propriétaires peuvent gérer leurs ingrédients" ON ingredient;
 CREATE POLICY "Les propriétaires peuvent gérer leurs ingrédients"
   ON ingredient
   FOR ALL

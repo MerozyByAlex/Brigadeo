@@ -28,6 +28,7 @@ CREATE INDEX ingredient_category_organization_id_idx ON ingredient_category(orga
 
 ALTER TABLE ingredient_category ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les catégories globales et celles de leur organisation" ON ingredient_category;
 CREATE POLICY "Les utilisateurs peuvent lire les catégories globales et celles de leur organisation"
   ON ingredient_category
   FOR SELECT
@@ -41,6 +42,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les catégories globales et celles 
     )
   );
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer les catégories de leur organisation" ON ingredient_category;
 CREATE POLICY "Les utilisateurs peuvent gérer les catégories de leur organisation"
   ON ingredient_category
   FOR ALL

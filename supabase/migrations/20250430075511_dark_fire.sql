@@ -40,6 +40,7 @@ ALTER TABLE ingredient DROP COLUMN restaurant_id;
 ALTER TABLE ingredient ADD COLUMN organization_id uuid NOT NULL REFERENCES organization(id) ON DELETE CASCADE;
 
 -- Politiques RLS pour organization
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire leur propre organisation" ON organization;
 CREATE POLICY "Les utilisateurs peuvent lire leur propre organisation"
   ON organization
   FOR SELECT
@@ -52,6 +53,7 @@ CREATE POLICY "Les utilisateurs peuvent lire leur propre organisation"
     )
   );
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer leur propre organisation" ON organization;
 CREATE POLICY "Les utilisateurs peuvent gérer leur propre organisation"
   ON organization
   FOR ALL
@@ -72,6 +74,7 @@ CREATE POLICY "Les utilisateurs peuvent gérer leur propre organisation"
   );
 
 -- Nouvelles politiques RLS pour ingredient
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les ingrédients de leur organisation" ON ingredient;
 CREATE POLICY "Les utilisateurs peuvent lire les ingrédients de leur organisation"
   ON ingredient
   FOR SELECT
@@ -84,6 +87,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les ingrédients de leur organisati
     )
   );
 
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer les ingrédients de leur organisation" ON ingredient;
 CREATE POLICY "Les utilisateurs peuvent gérer les ingrédients de leur organisation"
   ON ingredient
   FOR ALL

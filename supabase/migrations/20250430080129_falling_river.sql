@@ -22,6 +22,7 @@ ADD COLUMN organization_id uuid NOT NULL
 REFERENCES organization(id) ON DELETE CASCADE;
 
 -- Nouvelle politique : lecture des restaurants de l'organisation
+DROP POLICY IF EXISTS "Les utilisateurs peuvent lire les restaurants de leur organisation" ON restaurant;
 CREATE POLICY "Les utilisateurs peuvent lire les restaurants de leur organisation"
   ON restaurant
   FOR SELECT
@@ -35,6 +36,7 @@ CREATE POLICY "Les utilisateurs peuvent lire les restaurants de leur organisatio
   );
 
 -- Nouvelle politique : gestion des restaurants de l'organisation
+DROP POLICY IF EXISTS "Les utilisateurs peuvent gérer les restaurants de leur organisation" ON restaurant;
 CREATE POLICY "Les utilisateurs peuvent gérer les restaurants de leur organisation"
   ON restaurant
   FOR ALL
