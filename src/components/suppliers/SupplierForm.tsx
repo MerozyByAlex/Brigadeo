@@ -3,6 +3,7 @@ import { CheckCircle, X, HelpCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
 import { useToast } from '../../hooks/useToast';
+import Tooltip from '../ui/Tooltip';
 import FormField from '../ui/FormField';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -160,10 +161,9 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
                 placeholder="Ex: FR12345678901"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <HelpCircle
-                  className="h-4 w-4 text-gray-400"
-                  title="Le numéro de TVA officiel de ton fournisseur dans l'UE (ex : FR…)."
-                />
+                <Tooltip content="Le numéro de TVA officiel de ton fournisseur dans l'UE (ex : FR…).">
+                  <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                </Tooltip>
               </div>
             </div>
             <p className="text-xs text-gray-500">Si hors UE, laisse vide.</p>
