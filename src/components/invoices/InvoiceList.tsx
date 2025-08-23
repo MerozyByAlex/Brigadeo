@@ -4,7 +4,7 @@ import { formatDate } from '../../utils/date';
 
 type Invoice = {
   id: string;
-  date: string;
+  invoice_date: string;
   storage_path: string;
   supplier: string | null;
   restaurant: { name: string };
@@ -21,14 +21,14 @@ export default function InvoiceList() {
         .from('invoice')
         .select(`
           id,
-          date,
+          invoice_date,
           storage_path,
           supplier,
           restaurant:restaurant_id!inner (
             name
           )
         `)
-        .order('date', { ascending: false });
+        .order('invoice_date', { ascending: false });
 
       if (fetchError) {
         setError("Erreur lors du chargement des factures");
@@ -36,7 +36,7 @@ export default function InvoiceList() {
       } else {
         const parsed = (data || []).map((item: any): Invoice => ({
           id: item.id,
-          date: item.date,
+          invoice_date: item.invoice_date,
           storage_path: item.storage_path,
           supplier: item.supplier,
           restaurant: {
@@ -71,7 +71,7 @@ export default function InvoiceList() {
           {invoices.map((invoice) => (
             <tr key={invoice.id}>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {formatDate(invoice.date)}
+                {formatDate(invoice.invoice_date)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {invoice.restaurant.name}
