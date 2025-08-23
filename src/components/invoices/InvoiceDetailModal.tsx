@@ -175,13 +175,13 @@ export default function InvoiceDetailModal({ invoiceId, isOpen, onClose }: Invoi
           
           {loadingLines ? (
             <div className="text-center py-4">Chargement des lignes...</div>
-          ) : errorLines ? (
-            <div className="p-4 rounded bg-red-50 border border-red-200 text-red-600">
-              {errorLines}
-            </div>
           ) : lines.length === 0 ? (
             <div className="text-center text-gray-500 py-4">
               Aucune ligne de facture
+            </div>
+          ) : errorLines ? (
+            <div className="p-4 rounded bg-red-50 border border-red-200 text-red-600">
+              {errorLines}
             </div>
           ) : (
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -212,7 +212,7 @@ export default function InvoiceDetailModal({ invoiceId, isOpen, onClose }: Invoi
                         {line.quantity}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {line.unit}
+                        {line.unit ?? '—'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
                         {formatEuro(line.unit_price_excl_cents)}
