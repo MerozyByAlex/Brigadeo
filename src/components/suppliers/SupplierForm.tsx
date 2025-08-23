@@ -31,12 +31,9 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
   // Focus automatique sur le champ nom à l'ouverture
   useEffect(() => {
     const timer = setTimeout(() => {
-      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
-      if (nameInput) {
-        nameInput.focus();
-      }
+      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement | null;
+      nameInput?.focus();
     }, 100);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -47,7 +44,7 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
 
     const trimmedName = name.trim();
     const trimmedSiret = siret.trim() || null;
-    const trimmedVatNumber = (isForeign && vatNumber.trim()) ? vatNumber.trim() : null;
+    const trimmedVatNumber = isForeign && vatNumber.trim() ? vatNumber.trim() : null;
 
     if (trimmedName.length < 2) {
       setNameError('Le nom doit contenir au moins 2 caractères');
@@ -58,7 +55,6 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
 
     try {
       const profile = await getCurrentProfile();
-
       if (!profile.organization_id) {
         throw new Error('Aucune organisation trouvée');
       }
@@ -72,7 +68,7 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
           .update({
             name: trimmedName,
             siret: trimmedSiret,
-            vat_number: trimmedVatNumber
+            vat_number: trimmedVatNumber,
           })
           .eq('id', supplier.id));
       } else {
@@ -83,7 +79,7 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
             organization_id: profile.organization_id,
             name: trimmedName,
             siret: trimmedSiret,
-            vat_number: trimmedVatNumber
+            vat_number: trimmedVatNumber,
           }])
           .select('id')
           .single());
@@ -92,11 +88,9 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
       if (dbError) throw dbError;
 
       showToast({
-        text: supplier
-          ? "Fournisseur mis à jour avec succès !"
-          : "Fournisseur créé avec succès !",
+        text: supplier ? 'Fournisseur mis à jour avec succès !' : 'Fournisseur créé avec succès !',
         color: 'success',
-        icon: <CheckCircle className="h-4 w-4" />
+        icon: <CheckCircle className="h-4 w-4" />,
       });
 
       onSaved();
@@ -111,7 +105,7 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
       showToast({
         text: "Quelque chose s'est mal passé",
         color: 'error',
-        icon: <X className="h-4 w-4" />
+        icon: <X className="h-4 w-4" />,
       });
     } finally {
       setLoading(false);
@@ -165,17 +159,14 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
                 onChange={(e) => setVatNumber(e.target.value)}
                 placeholder="Ex: FR12345678901"
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <HelpCircle 
-                  className="h-4 w-4 text-gray-400" 
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <HelpCircle
+                  className="h-4 w-4 text-gray-400"
                   title="Le numéro de TVA officiel de ton fournisseur dans l'UE (ex : FR…)."
                 />
               </div>
             </div>
-            <p className="text-xs text-gray-500">
-              Si hors UE, laisse vide.
-            </p>
-          </div>
+            <p className="text-xs text-gray-500">Si hors UE, laisse vide.</p>
           </div>
         </FormField>
       )}
