@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, HelpCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
 import { useToast } from '../../hooks/useToast';
@@ -21,6 +21,7 @@ type SupplierFormProps = {
 export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFormProps) {
   const [name, setName] = useState(supplier?.name ?? '');
   const [siret, setSiret] = useState(supplier?.siret ?? '');
+  const [isForeign, setIsForeign] = useState(Boolean(supplier?.vat_number));
   const [vatNumber, setVatNumber] = useState(supplier?.vat_number ?? '');
   const [loading, setLoading] = useState(false);
   const [nameError, setNameError] = useState('');
@@ -46,7 +47,7 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
 
     const trimmedName = name.trim();
     const trimmedSiret = siret.trim() || null;
-    const trimmedVatNumber = vatNumber.trim() || null;
+    const trimmedVatNumber = (isForeign && vatNumber.trim()) ? vatNumber.trim() : null;
 
     if (trimmedName.length < 2) {
       setNameError('Le nom doit contenir au moins 2 caractères');
@@ -119,6 +120,21 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <FormField>
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="isForeign"
+            checked={isForeign}
+            onChange={(e) => setIsForeign(e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="isForeign" className="text-sm font-medium text-gray-700">
+            Fournisseur à l'étranger
+          </label>
+        </div>
+      </FormField>
+
       <FormField label="Nom du fournisseur" error={nameError} required>
         <Input
           name="name"
@@ -138,14 +154,29 @@ export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFor
         />
       </FormField>
 
-      <FormField label="Numéro de TVA">
-        <Input
-          type="text"
-          value={vatNumber}
-          onChange={(e) => setVatNumber(e.target.value)}
-          placeholder="Numéro de TVA intracommunautaire (optionnel)"
-        />
-      </FormField>
+      {isForeign && (
+        <FormField label="N° TVA intracommunautaire">
+          <div className="space-y-2">
+            <div className="relative">
+              <Input
+                type="text"
+                value={vatNumber}
+                onChange={(e) => setVatNumber(e.target.value)}
+                placeholder="Ex: FR12345678901"
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <HelpCircle 
+                  className="h-4 w-4 text-gray-400" 
+                  title="Le numéro de TVA officiel de ton fournisseur dans l'UE (ex : FR…)."
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              Si hors UE, laisse vide.
+            </p>
+          </div>
+        </FormField>
+      )}
 
       <div className="flex gap-3 pt-4">
         <Button

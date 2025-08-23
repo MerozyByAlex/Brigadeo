@@ -159,7 +159,14 @@ export default function SuppliersPage() {
               {filteredSuppliers.map((supplier) => (
                 <tr key={supplier.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {supplier.name}
+                    <div className="flex items-center gap-2">
+                      {supplier.name}
+                      {supplier.vat_number && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          UE
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {supplier.siret || '—'}
