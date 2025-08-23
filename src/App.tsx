@@ -11,7 +11,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import InvoiceList from './pages/invoices/InvoiceList';
+import InvoiceListPage from './pages/invoices/InvoiceListPage';
 import IngredientList from './pages/ingredients/IngredientList';
 import AccountPage from './pages/account/AccountPage';
 import RestaurantList from './pages/restaurants/RestaurantList';
@@ -67,7 +67,7 @@ function App() {
             } />
             <Route path="invoices" element={
               <PrivateRoute>
-                <InvoiceList />
+                <InvoiceListPage />
               </PrivateRoute>
             } />
             <Route path="products" element={
