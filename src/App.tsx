@@ -16,6 +16,7 @@ import IngredientList from './pages/ingredients/IngredientList';
 import AccountPage from './pages/account/AccountPage';
 import RestaurantList from './pages/restaurants/RestaurantList';
 import RecipeList from './pages/recipes/RecipeList';
+import SuppliersPage from './pages/suppliers/SuppliersPage';
 
 function App() {
   return (
@@ -52,6 +53,11 @@ function App() {
             <Route path="recipes" element={
               <PrivateRoute>
                 <RecipeList />
+              </PrivateRoute>
+            } />
+            <Route path="suppliers" element={
+              <PrivateRoute>
+                <SuppliersPage />
               </PrivateRoute>
             } />
             <Route path="checkout" element={

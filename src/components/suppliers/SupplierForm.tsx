@@ -1,0 +1,180 @@
+import { useState, useEffect } from 'react';
+import { CheckCircle, X } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { getCurrentProfile } from '../../utils/auth';
+import { useToast } from '../../hooks/useToast';
+import FormField from '../ui/FormField';
+import Input from '../ui/Input';
+import Button from '../ui/Button';
+
+type SupplierFormProps = {
+  supplier?: {
+    id: string;
+    name: string;
+    siret?: string | null;
+    vat_number?: string | null;
+  };
+  onClose: () => void;
+  onSaved: () => void;
+};
+
+export default function SupplierForm({ supplier, onClose, onSaved }: SupplierFormProps) {
+  const [name, setName] = useState(supplier?.name ?? '');
+  const [siret, setSiret] = useState(supplier?.siret ?? '');
+  const [vatNumber, setVatNumber] = useState(supplier?.vat_number ?? '');
+  const [loading, setLoading] = useState(false);
+  const [nameError, setNameError] = useState('');
+  const [error, setError] = useState('');
+  const showToast = useToast();
+
+  // Focus automatique sur le champ nom à l'ouverture
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+      if (nameInput) {
+        nameInput.focus();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setNameError('');
+
+    const trimmedName = name.trim();
+    const trimmedSiret = siret.trim() || null;
+    const trimmedVatNumber = vatNumber.trim() || null;
+
+    if (trimmedName.length < 2) {
+      setNameError('Le nom doit contenir au moins 2 caractères');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const profile = await getCurrentProfile();
+
+      if (!profile.organization_id) {
+        throw new Error('Aucune organisation trouvée');
+      }
+
+      let dbError;
+
+      if (supplier) {
+        // Mise à jour
+        ({ error: dbError } = await supabase
+          .from('supplier')
+          .update({
+            name: trimmedName,
+            siret: trimmedSiret,
+            vat_number: trimmedVatNumber
+          })
+          .eq('id', supplier.id));
+      } else {
+        // Création
+        ({ error: dbError } = await supabase
+          .from('supplier')
+          .insert([{
+            organization_id: profile.organization_id,
+            name: trimmedName,
+            siret: trimmedSiret,
+            vat_number: trimmedVatNumber
+          }])
+          .select('id')
+          .single());
+      }
+
+      if (dbError) throw dbError;
+
+      showToast({
+        text: supplier
+          ? "Fournisseur mis à jour avec succès !"
+          : "Fournisseur créé avec succès !",
+        color: 'success',
+        icon: <CheckCircle className="h-4 w-4" />
+      });
+
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : `Une erreur s'est produite lors de la ${supplier ? 'modification' : 'création'} du fournisseur`
+      );
+      console.error(err);
+      showToast({
+        text: "Quelque chose s'est mal passé",
+        color: 'error',
+        icon: <X className="h-4 w-4" />
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormField label="Nom du fournisseur" error={nameError} required>
+        <Input
+          name="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </FormField>
+
+      <FormField label="SIRET">
+        <Input
+          type="text"
+          value={siret}
+          onChange={(e) => setSiret(e.target.value)}
+          placeholder="Numéro SIRET (optionnel)"
+        />
+      </FormField>
+
+      <FormField label="Numéro de TVA">
+        <Input
+          type="text"
+          value={vatNumber}
+          onChange={(e) => setVatNumber(e.target.value)}
+          placeholder="Numéro de TVA intracommunautaire (optionnel)"
+        />
+      </FormField>
+
+      <div className="flex gap-3 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          disabled={loading}
+          className="flex-1"
+        >
+          Annuler
+        </Button>
+        <Button
+          type="submit"
+          loading={loading}
+          disabled={loading || !name.trim()}
+          className="flex-1"
+        >
+          {supplier ? 'Mettre à jour' : 'Enregistrer'}
+        </Button>
+      </div>
+
+      {error && (
+        <div
+          className="p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm"
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
+    </form>
+  );
+}

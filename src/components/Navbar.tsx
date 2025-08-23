@@ -79,6 +79,12 @@ export default function Navbar() {
               >
                 Ingrédients
               </Link>
+              <Link
+                to="/suppliers"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                Fournisseurs
+              </Link>
             </Dropdown>
             <Button
               variant="outline"
