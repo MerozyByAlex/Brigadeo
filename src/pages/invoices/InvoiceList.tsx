@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, Eye } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { getCurrentProfile } from '../../utils/auth';
 import { formatDate } from '../../utils/date';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import UploadInvoiceForm from '../../components/invoices/UploadInvoiceForm';
+import InvoiceDetailModal from '../../components/invoices/InvoiceDetailModal';
 
 type Invoice = {
   id: string;
-  date: string;
+  invoice_date: string;
   storage_path: string;
   supplier: string | null;
   restaurant: {
@@ -18,11 +20,13 @@ type Invoice = {
 };
 
 export default function InvoiceList() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const invoiceId = searchParams.get('invoiceId') || '';
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loadingInvoiceId, setLoadingInvoiceId] = useState<string | null>(null);
 
   const fetchInvoices = async () => {
     try {
@@ -36,7 +40,7 @@ export default function InvoiceList() {
         .from('invoice')
         .select(`
           id,
-          date,
+          invoice_date,
           storage_path,
           supplier,
           restaurant:restaurant_id (
@@ -44,7 +48,7 @@ export default function InvoiceList() {
           )
         `)
         .eq('organization_id', profile.organization_id)
-        .order('date', { ascending: false });
+        .order('invoice_date', { ascending: false });
 
       if (fetchError) throw fetchError;
         const formattedInvoices = (data || []).map(invoice => ({
@@ -70,25 +74,8 @@ export default function InvoiceList() {
     fetchInvoices();
   }, []);
 
-  const handleViewInvoice = async (invoice: Invoice) => {
-    try {
-      setLoadingInvoiceId(invoice.id);
-
-      const { data, error: signedUrlError } = await supabase.storage
-        .from('invoices')
-        .createSignedUrl(invoice.storage_path, 3600);
-      
-      const signedUrl = data?.signedUrl;
-      if (signedUrlError) throw signedUrlError;
-      if (!signedUrl) throw new Error("Impossible de générer l'URL de la facture");
-
-      window.open(signedUrl, '_blank');
-    } catch (err) {
-      console.error(err);
-      alert("Impossible d'accéder à la facture. Veuillez réessayer.");
-    } finally {
-      setLoadingInvoiceId(null);
-    }
+  const handleViewInvoice = (invoice: Invoice) => {
+    navigate({ search: `?invoiceId=${invoice.id}` }, { replace: false });
   };
 
   const handleUploadSuccess = () => {
@@ -137,6 +124,9 @@ export default function InvoiceList() {
                   Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Numéro
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Restaurant
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -151,7 +141,10 @@ export default function InvoiceList() {
               {invoices.map((invoice) => (
                 <tr key={invoice.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(invoice.date)}
+                    {formatDate(invoice.invoice_date)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    —
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {invoice.restaurant.name}
@@ -164,10 +157,9 @@ export default function InvoiceList() {
                       <button
                         onClick={() => handleViewInvoice(invoice)}
                         className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                        title="Voir la facture"
-                        disabled={loadingInvoiceId === invoice.id}
+                        title="Voir les détails"
                       >
-                        <FileText className={`h-4 w-4 ${loadingInvoiceId === invoice.id ? 'animate-pulse' : ''}`} />
+                        <Eye className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -177,6 +169,12 @@ export default function InvoiceList() {
           </table>
         </div>
       )}
+
+      <InvoiceDetailModal
+        invoiceId={invoiceId}
+        isOpen={Boolean(invoiceId)}
+        onClose={() => navigate({ search: '' }, { replace: true })}
+      />
     </div>
   );
 }

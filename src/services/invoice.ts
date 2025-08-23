@@ -1,4 +1,67 @@
 import { getSessionToken } from '../utils/auth';
+import { supabase } from '../lib/supabase';
+
+export type InvoiceHeader = {
+  id: string;
+  invoice_number: string | null;
+  invoice_date: string;
+  status: string;
+  subtotal_excl_cents: number | null;
+  total_vat_cents: number | null;
+  total_incl_cents: number | null;
+  meta_rounding_diff_cents: number | null;
+  supplier: {
+    name: string;
+  } | null;
+};
+
+export type InvoiceLine = {
+  id: string;
+  quantity: number;
+  unit: string;
+  unit_price_excl_cents: number;
+  total_excl_cents: number;
+  total_vat_cents: number;
+};
+
+export async function getInvoiceById(id: string): Promise<InvoiceHeader> {
+  const { data, error } = await supabase
+    .from('invoice')
+    .select(`
+      id,
+      invoice_number,
+      invoice_date,
+      status,
+      subtotal_excl_cents,
+      total_vat_cents,
+      total_incl_cents,
+      meta_rounding_diff_cents,
+      supplier:supplier_id (
+        name
+      )
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  if (!data) throw new Error('Facture non trouvée');
+
+  return {
+    ...data,
+    supplier: Array.isArray(data.supplier) ? data.supplier[0] : data.supplier
+  };
+}
+
+export async function getInvoiceLines(invoiceId: string): Promise<InvoiceLine[]> {
+  const { data, error } = await supabase
+    .from('invoice_line')
+    .select('id, quantity, unit, unit_price_excl_cents, total_excl_cents, total_vat_cents')
+    .eq('invoice_id', invoiceId)
+    .order('id');
+
+  if (error) throw error;
+  return data || [];
+}
 
 export async function analyzeInvoice(storagePath: string, organization_id: string): Promise<any[]> {
   try {
