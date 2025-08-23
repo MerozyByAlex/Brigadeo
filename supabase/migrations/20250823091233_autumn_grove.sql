@@ -52,12 +52,12 @@ CREATE POLICY "Users can manage suppliers in their organization"
   USING (organization_id IN (
     SELECT profiles.organization_id
     FROM profiles
-    WHERE profiles.user_id = uid()
+    WHERE profiles.user_id = auth.uid()
   ))
   WITH CHECK (organization_id IN (
     SELECT profiles.organization_id
     FROM profiles
-    WHERE profiles.user_id = uid()
+    WHERE profiles.user_id = auth.uid()
   ));
 
 CREATE POLICY "Users can read suppliers in their organization"
@@ -67,7 +67,7 @@ CREATE POLICY "Users can read suppliers in their organization"
   USING (organization_id IN (
     SELECT profiles.organization_id
     FROM profiles
-    WHERE profiles.user_id = uid()
+    WHERE profiles.user_id = auth.uid()
   ));
 
 -- Modify invoice table: remove supplier text column if it exists

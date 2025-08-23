@@ -62,7 +62,7 @@ CREATE POLICY "Users can read invoice lines of their organization"
       WHERE i.organization_id IN (
         SELECT profiles.organization_id
         FROM profiles
-        WHERE profiles.user_id = uid()
+        WHERE profiles.user_id = auth.uid()
       )
     )
   );
