@@ -10,7 +10,8 @@
     "dev:front": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:backend": "cd backend && npm run test"
   },
   "dependencies": {
     "@babel/plugin-proposal-decorators": "^7.24.1",
