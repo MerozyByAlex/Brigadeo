@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { supabase } from '../lib/supabaseClient';
 import { requireOrgAccess } from '../middleware/requireOrgAccess';
 import { InvoiceHeaderPayload, InvoiceLinePayload, InvoiceUpsertLinesPayload } from '../../shared/zod/invoice';
+import { computeInvoiceTotals, getRoundingTolerance, validateInvoiceTotals } from '../services/invoiceTotalsService';
 import { ZodError } from 'zod';
 
 const router = Router();
@@ -149,6 +150,8 @@ router.get('/:id', requireOrgAccess('invoice'), async (req: Request, res: Respon
 // PUT /invoices/:id - Update invoice header
 router.put('/:id', requireOrgAccess('invoice'), async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const invoiceId = req.params.id;
+    
     // Remove organization_id from body to prevent client tampering
     const { organization_id, ...bodyWithoutOrgId } = req.body;
     
@@ -160,11 +163,31 @@ router.put('/:id', requireOrgAccess('invoice'), async (req: Request, res: Respon
       validatedPayload.invoice_date = validatedPayload.invoice_date.toISOString();
     }
 
+    // Validate totals if there are invoice lines
+    const computed = await computeInvoiceTotals(invoiceId);
+    const tolerance = getRoundingTolerance();
+    
+    if (computed.line_count > 0) {
+      const validation = validateInvoiceTotals(validatedPayload, computed, tolerance);
+      
+      if (!validation.ok) {
+        return res.status(422).json({
+          error: "Invoice totals mismatch",
+          details: {
+            expected: validation.expected,
+            received: validation.received,
+            deltas: validation.deltas,
+            tolerance_cents: tolerance
+          }
+        });
+      }
+    }
+
     // Update in database
     const { data, error } = await supabase
       .from('invoice')
       .update(validatedPayload)
-      .eq('id', req.params.id)
+      .eq('id', invoiceId)
       .select('*')
       .single();
 
@@ -202,6 +225,53 @@ router.delete('/:id', requireOrgAccess('invoice'), async (req: Request, res: Res
     if (error) throw error;
 
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /invoices/:id/totals/check - Check invoice totals
+router.get('/:id/totals/check', requireOrgAccess('invoice'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const invoiceId = req.params.id;
+    
+    // Compute totals from lines
+    const computed = await computeInvoiceTotals(invoiceId);
+    const tolerance = getRoundingTolerance();
+    
+    // Get current header for validation
+    const { data: header, error: headerError } = await supabase
+      .from('invoice')
+      .select('subtotal_excl_cents, total_vat_cents, total_incl_cents, meta_rounding_diff_cents')
+      .eq('id', invoiceId)
+      .single();
+
+    if (headerError) throw headerError;
+
+    let ok = true;
+    let message: string | undefined;
+
+    if (computed.line_count === 0) {
+      ok = true;
+    } else {
+      const validation = validateInvoiceTotals(header, computed, tolerance);
+      ok = validation.ok;
+      if (!ok) {
+        message = "Invoice totals mismatch";
+      }
+    }
+
+    res.json({
+      computed: {
+        subtotal_excl_cents: computed.subtotal_excl_cents,
+        total_vat_cents: computed.total_vat_cents,
+        total_incl_cents_if_meta_0: computed.subtotal_excl_cents + computed.total_vat_cents
+      },
+      line_count: computed.line_count,
+      tolerance_cents: tolerance,
+      ok,
+      ...(message && { message })
+    });
   } catch (err) {
     next(err);
   }
