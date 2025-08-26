@@ -6,7 +6,8 @@
     "start": "node dist/index.js",
     "dev": "npx nodemon --watch '**/*.ts' --exec 'npx ts-node' index.ts",
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "test:watch": "vitest --watch"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

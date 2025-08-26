@@ -15,6 +15,22 @@ const startPort = process.env.PORT ? parseInt(process.env.PORT) : 3002;
 app.use(cors());
 app.use(express.json());
 
+// Middleware to simulate authenticated user (for development)
+// In production, this would be replaced by proper JWT authentication
+app.use((req, res, next) => {
+  // This is a placeholder - in real implementation, extract user from JWT token
+  req.user = { id: 'user-id-from-jwt' };
+  next();
+});
+
+// Middleware to simulate authenticated user (for development)
+// In production, this would be replaced by proper JWT authentication
+app.use((req, res, next) => {
+  // This is a placeholder - in real implementation, extract user from JWT token
+  req.user = { id: 'user-id-from-jwt' };
+  next();
+});
+
 app.get('/ping', (_req: Request, res: Response) => {
   res.json({ message: 'pong' });
 });
