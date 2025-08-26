@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { createServer } from 'http';
 import analyzeInvoiceRouter from './routes/analyzeInvoice';
+import invoicesRouter from './routes/invoices';
 import webhookRouter from './routes/webhook';
 
 dotenv.config();
@@ -19,6 +20,7 @@ app.get('/ping', (_req: Request, res: Response) => {
 });
 
 app.use('/analyze-invoice', analyzeInvoiceRouter);
+app.use('/invoices', invoicesRouter);
 app.use('/webhook', webhookRouter);
 
 // Fonction pour trouver un port disponible
