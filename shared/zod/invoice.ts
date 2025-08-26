@@ -2,33 +2,33 @@ import { z } from "zod";
 
 /** ─── Invoice header ─────────────────────────────────────────────── */
 export const InvoiceHeaderPayload = z.object({
-  id: z.string().uuid(),
-  organization_id: z.string().uuid(),
-  restaurant_id: z.string().uuid(),
+  id: z.string().uuid().optional(), // ← généré côté DB
+  organization_id: z.string().uuid().optional(), // rempli côté serveur
+  restaurant_id: z.string().uuid().optional(),
   supplier_id: z.string().uuid().nullable().optional(),
 
   invoice_number: z.string().nullable().optional(),
-  invoice_date: z.string().datetime(),
-  status: z.enum(["imported", "validated", "error"]),
+  invoice_date: z.coerce.date(), // accepte string ISO ou Date
+  status: z.enum(["draft", "imported", "validated", "error"]),
   currency: z.string().length(3).regex(/^[A-Z]{3}$/),
 
   subtotal_excl_cents: z.number().int().nonnegative().nullable().optional(),
   total_vat_cents: z.number().int().nonnegative().nullable().optional(),
   total_incl_cents: z.number().int().nonnegative().nullable().optional(),
-  meta_rounding_diff_cents: z.number().int().nonnegative().nullable().optional(),
+  meta_rounding_diff_cents: z.number().int().nonnegative().optional(),
 });
 
 export type InvoiceHeaderPayload = z.infer<typeof InvoiceHeaderPayload>;
 
 /** ─── Invoice line ──────────────────────────────────────────────── */
 export const InvoiceLinePayload = z.object({
-  id: z.string().uuid(),
-  invoice_id: z.string().uuid(),
-  description: z.string(),
+  id: z.string().uuid().optional(), // ← généré côté DB
+  invoice_id: z.string().uuid().optional(), // auto-lié côté serveur
+  description: z.string().min(1),
   raw_label: z.string().optional(),
 
   quantity: z.number().positive(),
-  unit_label: z.string(),
+  unit_label: z.string().optional(), // ← souvent purement décoratif
   unit_type: z.enum(["weight", "volume", "unit"]),
   unit_base_qty: z.number().positive(),
 
