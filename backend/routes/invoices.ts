@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { supabase } from '../lib/supabaseClient';
 import { requireOrgAccess } from '../middleware/requireOrgAccess';
-import { InvoiceHeaderPayload } from '../../shared/zod/invoice';
+import { InvoiceHeaderPayload, InvoiceLinePayload, InvoiceUpsertLinesPayload } from '../../shared/zod/invoice';
 import { ZodError } from 'zod';
 
 const router = Router();
@@ -200,6 +200,154 @@ router.delete('/:id', requireOrgAccess('invoice'), async (req: Request, res: Res
       .eq('id', req.params.id);
 
     if (error) throw error;
+
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /invoices/:id/lines - Bulk replace invoice lines
+router.post('/:id/lines', requireOrgAccess('invoice'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const invoiceId = req.params.id;
+    
+    // Check payload size limit
+    if (req.body.lines && req.body.lines.length > 1000) {
+      return res.status(413).json({ error: 'Too many lines (max 1000)' });
+    }
+
+    // Normalize lines before validation
+    const normalizedLines = (req.body.lines || []).map((line: any) => {
+      const { id, invoice_id, ...rest } = line; // Remove client-provided id and invoice_id
+      return {
+        ...rest,
+        description: rest.description?.trim?.() || rest.description,
+        raw_label: rest.raw_label?.trim?.() || rest.raw_label
+      };
+    });
+
+    // Validate with Zod schema
+    const validatedPayload = InvoiceUpsertLinesPayload.parse({ lines: normalizedLines });
+
+    // Force parent invoice_id for each line
+    const linesToInsert = validatedPayload.lines.map(line => ({
+      ...line,
+      invoice_id: invoiceId
+    }));
+
+    // Replace operation: delete existing lines then insert new ones
+    // Note: This is not atomic with Supabase JS, but acceptable for current requirements
+    
+    // 1. Delete existing lines
+    const { error: deleteError } = await supabase
+      .from('invoice_line')
+      .delete()
+      .eq('invoice_id', invoiceId);
+
+    if (deleteError) throw deleteError;
+
+    // 2. Insert new lines (if any)
+    let insertedLines = [];
+    if (linesToInsert.length > 0) {
+      const { data, error: insertError } = await supabase
+        .from('invoice_line')
+        .insert(linesToInsert)
+        .select('*');
+
+      if (insertError) throw insertError;
+      insertedLines = data || [];
+    }
+
+    res.status(200).json({
+      count: insertedLines.length,
+      lines: insertedLines
+    });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return res.status(422).json({ 
+        error: 'Validation failed', 
+        details: err.errors 
+      });
+    }
+    next(err);
+  }
+});
+
+// PUT /invoices/:id/lines/:lineId - Update single invoice line
+router.put('/:id/lines/:lineId', requireOrgAccess('invoice'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const invoiceId = req.params.id;
+    const lineId = req.params.lineId;
+
+    // Normalize payload before validation
+    const { id, invoice_id, ...bodyWithoutIds } = req.body;
+    const normalizedPayload = {
+      ...bodyWithoutIds,
+      description: bodyWithoutIds.description?.trim?.() || bodyWithoutIds.description,
+      raw_label: bodyWithoutIds.raw_label?.trim?.() || bodyWithoutIds.raw_label
+    };
+
+    // Validate with Zod schema
+    const validatedPayload = InvoiceLinePayload.parse(normalizedPayload);
+
+    // Force parent invoice_id
+    const payloadWithInvoiceId = {
+      ...validatedPayload,
+      invoice_id: invoiceId
+    };
+
+    // Update in database
+    const { data, error } = await supabase
+      .from('invoice_line')
+      .update(payloadWithInvoiceId)
+      .eq('id', lineId)
+      .eq('invoice_id', invoiceId)
+      .select('*')
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice line not found' });
+      }
+      throw error;
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Invoice line not found' });
+    }
+
+    res.json(data);
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return res.status(422).json({ 
+        error: 'Validation failed', 
+        details: err.errors 
+      });
+    }
+    next(err);
+  }
+});
+
+// DELETE /invoices/:id/lines/:lineId - Delete single invoice line
+router.delete('/:id/lines/:lineId', requireOrgAccess('invoice'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const invoiceId = req.params.id;
+    const lineId = req.params.lineId;
+
+    // Delete with 404 detection
+    const { data, error } = await supabase
+      .from('invoice_line')
+      .delete()
+      .eq('id', lineId)
+      .eq('invoice_id', invoiceId)
+      .select('id');
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'Invoice line not found' });
+    }
 
     res.status(204).send();
   } catch (err) {
