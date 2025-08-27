@@ -7,6 +7,7 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import FormField from '../ui/FormField';
+import { InvoiceHeaderPayload } from '../../../shared/zod/invoice';
 
 type InvoiceCreateModalProps = {
   isOpen: boolean;
@@ -206,6 +207,17 @@ export default function InvoiceCreateModal({ isOpen, onClose, onCreated }: Invoi
         currency: 'EUR',
         storage_path: `manual/${Date.now()}_manual_invoice.pdf` // Chemin fictif pour les factures manuelles
       };
+
+      // Validation avec le schéma Zod avant insertion
+      try {
+        InvoiceHeaderPayload.parse({
+          ...invoiceData,
+          invoice_date: new Date(invoiceData.invoice_date)
+        });
+      } catch (validationError) {
+        console.error('Erreur de validation:', validationError);
+        throw new Error('Données de facture invalides');
+      }
 
       const { error: insertError } = await supabase
         .from('invoice')

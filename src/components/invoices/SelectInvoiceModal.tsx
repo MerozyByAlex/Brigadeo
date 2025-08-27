@@ -8,15 +8,11 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { Input } from '../ui/Input';
 import UploadInvoiceForm from './UploadInvoiceForm';
+import type { InvoiceHeaderWithRelations } from '../../types/invoice';
 
-type Invoice = {
-  id: string;
-  invoice_date: string;
+type InvoiceForSelection = InvoiceHeaderWithRelations & {
   storage_path: string;
-  supplier: string | null;
-  restaurant: {
-    name: string;
-  } | null;
+  supplier: string | null; // Pour compatibilité avec l'ancien format
 };
 
 type SelectInvoiceModalProps = {
@@ -26,7 +22,7 @@ type SelectInvoiceModalProps = {
 };
 
 export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: SelectInvoiceModalProps) {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceForSelection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'upload'>('list');
@@ -61,7 +57,7 @@ export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: Select
         restaurant: Array.isArray(invoice.restaurant)
           ? invoice.restaurant[0] || null
           : invoice.restaurant,
-      })) as Invoice[];
+      })) as InvoiceForSelection[];
 
       setInvoices(cleanedData);
     } catch (err) {

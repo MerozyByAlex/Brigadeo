@@ -5,6 +5,7 @@ import { getCurrentProfile } from '../../utils/auth';
 import FormField from '../ui/FormField';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
+import { InvoiceHeaderPayload } from '../../../shared/zod/invoice';
 
 type Restaurant = {
   id: string;
@@ -119,15 +120,27 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
       if (!uploadData?.path) throw new Error("Erreur lors de l'upload du fichier");
 
       // Création de l'entrée dans la table invoice
+      const invoiceData = {
+        organization_id: profile.organization_id,
+        restaurant_id: restaurantId,
+        storage_path: uploadData.path,
+        invoice_date: new Date(date),
+        supplier: supplier.trim() || null,
+        status: 'imported' as const,
+        currency: 'EUR' as const
+      };
+
+      // Validation avec le schéma Zod
+      try {
+        InvoiceHeaderPayload.parse(invoiceData);
+      } catch (validationError) {
+        console.error('Erreur de validation:', validationError);
+        throw new Error('Données de facture invalides');
+      }
+
       const { data: invoice, error: insertError } = await supabase
         .from('invoice')
-        .insert([{
-          organization_id: profile.organization_id,
-          restaurant_id: restaurantId,
-          storage_path: uploadData.path,
-          date,
-          supplier: supplier.trim() || null
-        }])
+        .insert([invoiceData])
         .select()
         .single();
 

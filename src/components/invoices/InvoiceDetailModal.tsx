@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { getInvoiceById, getInvoiceLines, type InvoiceHeader, type InvoiceLine } from '../../services/invoice';
+import { getInvoiceById, getInvoiceLines } from '../../services/invoice';
+import type { InvoiceHeaderWithRelations, InvoiceLine } from '../../types/invoice';
 import { formatDate } from '../../utils/date';
 import Modal from '../ui/Modal';
 
@@ -41,7 +42,7 @@ const getStatusColor = (status: string) => {
 };
 
 export default function InvoiceDetailModal({ invoiceId, isOpen, onClose }: InvoiceDetailModalProps) {
-  const [header, setHeader] = useState<InvoiceHeader | null>(null);
+  const [header, setHeader] = useState<InvoiceHeaderWithRelations | null>(null);
   const [lines, setLines] = useState<InvoiceLine[]>([]);
   const [loadingHeader, setLoadingHeader] = useState(false);
   const [loadingLines, setLoadingLines] = useState(false);
@@ -212,16 +213,16 @@ export default function InvoiceDetailModal({ invoiceId, isOpen, onClose }: Invoi
                         {line.quantity}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {line.unit ?? '—'}
+                        {line.unit_label ?? '—'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
                         {formatEuro(line.unit_price_excl_cents)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {formatEuro(line.total_excl_cents)}
+                        {formatEuro(line.line_total_excl_cents)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {formatEuro(line.total_vat_cents)}
+                        {formatEuro(line.vat_amount_cents)}
                       </td>
                     </tr>
                   ))}

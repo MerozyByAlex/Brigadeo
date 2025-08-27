@@ -7,14 +7,9 @@ import { formatDate } from '../../utils/date';
 import Button from '../../components/ui/Button';
 import InvoiceDetailModal from '../../components/invoices/InvoiceDetailModal';
 import InvoiceCreateModal from '../../components/invoices/InvoiceCreateModal';
+import type { InvoiceHeaderWithRelations } from '../../types/invoice';
 
-type Invoice = {
-  id: string;
-  invoice_number: string | null;
-  invoice_date: string;
-  supplier_id: string | null;
-  total_incl_cents: number | null;
-  status: string;
+type InvoiceForList = InvoiceHeaderWithRelations & {
   supplierName?: string;
 };
 
@@ -60,7 +55,7 @@ const getStatusColor = (status: string) => {
 export default function InvoiceListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const invoiceId = searchParams.get('invoiceId');
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceForList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -111,7 +106,7 @@ export default function InvoiceListPage() {
       const enrichedInvoices = invoices.map(invoice => ({
         ...invoice,
         supplierName: invoice.supplier_id ? supplierMap[invoice.supplier_id] : undefined
-      }));
+      })) as InvoiceForList[];
 
       setInvoices(enrichedInvoices);
     } catch (err) {

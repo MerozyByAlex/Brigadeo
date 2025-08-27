@@ -1,30 +1,9 @@
 import { getSessionToken } from '../utils/auth';
 import { supabase } from '../lib/supabase';
+import { InvoiceHeaderPayload, InvoiceLinePayload } from '../../shared/zod/invoice';
+import type { InvoiceHeader, InvoiceLine, InvoiceHeaderWithRelations } from '../types/invoice';
 
-export type InvoiceHeader = {
-  id: string;
-  invoice_number: string | null;
-  invoice_date: string;
-  status: string;
-  subtotal_excl_cents: number | null;
-  total_vat_cents: number | null;
-  total_incl_cents: number | null;
-  meta_rounding_diff_cents: number | null;
-  supplier: {
-    name: string;
-  } | null;
-};
-
-export type InvoiceLine = {
-  id: string;
-  quantity: number;
-  unit?: string | null;
-  unit_price_excl_cents: number;
-  total_excl_cents: number;
-  total_vat_cents: number;
-};
-
-export async function getInvoiceById(id: string): Promise<InvoiceHeader> {
+export async function getInvoiceById(id: string): Promise<InvoiceHeaderWithRelations> {
   const { data, error } = await supabase
     .from('invoice')
     .select(`
@@ -37,6 +16,7 @@ export async function getInvoiceById(id: string): Promise<InvoiceHeader> {
       total_incl_cents,
       meta_rounding_diff_cents,
       supplier:supplier_id (
+        id,
         name
       )
     `)
@@ -46,26 +26,54 @@ export async function getInvoiceById(id: string): Promise<InvoiceHeader> {
   if (error) throw error;
   if (!data) throw new Error('Facture non trouvée');
 
-  return {
+  const rawHeader = {
     ...data,
     supplier: Array.isArray(data.supplier) ? data.supplier[0] : data.supplier
   };
+
+  try {
+    // Validation avec le schéma Zod
+    const validatedHeader = InvoiceHeaderPayload.parse({
+      ...rawHeader,
+      invoice_date: new Date(rawHeader.invoice_date)
+    });
+    
+    return {
+      ...validatedHeader,
+      supplier: rawHeader.supplier
+    } as InvoiceHeaderWithRelations;
+  } catch (parseError) {
+    console.error('Erreur de validation des données de facture:', parseError);
+    throw new Error('Données de facture invalides');
+  }
 }
 
 export async function getInvoiceLines(invoiceId: string): Promise<InvoiceLine[]> {
   try {
     const { data, error } = await supabase
       .from('invoice_line')
-      .select('id, quantity, unit, unit_price_excl_cents, total_excl_cents, total_vat_cents')
+      .select('id, quantity, unit_label, unit_type, unit_base_qty, unit_price_excl_cents, line_total_excl_cents, vat_amount_cents, vat_rate, description')
       .eq('invoice_id', invoiceId)
       .order('id');
 
     if (error) throw error;
-    return data || [];
+    
+    const rawLines = data || [];
+    
+    try {
+      // Validation avec le schéma Zod
+      const validatedLines = rawLines.map(line => 
+        InvoiceLinePayload.parse(line)
+      );
+      
+      return validatedLines;
+    } catch (parseError) {
+      console.error('Erreur de validation des lignes de facture:', parseError);
+      return []; // Retourner un tableau vide plutôt que de propager des données invalides
+    }
   } catch (error: any) {
     if (
-      error?.code === '42703' ||
-      error?.message?.includes('column invoice_line.unit does not exist')
+      error?.code === '42703'
     ) {
       return [];
     }
