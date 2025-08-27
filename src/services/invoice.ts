@@ -11,6 +11,7 @@ export async function getInvoiceById(id: string): Promise<InvoiceHeaderWithRelat
       invoice_number,
       invoice_date,
       status,
+      currency,
       subtotal_excl_cents,
       total_vat_cents,
       total_incl_cents,
@@ -28,6 +29,7 @@ export async function getInvoiceById(id: string): Promise<InvoiceHeaderWithRelat
 
   const rawHeader = {
     ...data,
+    currency: data.currency,
     supplier: Array.isArray(data.supplier) ? data.supplier[0] : data.supplier
   };
 
