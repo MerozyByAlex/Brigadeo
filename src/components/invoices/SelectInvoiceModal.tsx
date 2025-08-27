@@ -12,7 +12,7 @@ import type { InvoiceHeaderWithRelations } from '../../types/invoice';
 
 type InvoiceForSelection = InvoiceHeaderWithRelations & {
   storage_path: string;
-  supplier: string | null; // Pour compatibilité avec l'ancien format
+  supplierName?: string; // Pour compatibilité avec l'ancien format
 };
 
 type SelectInvoiceModalProps = {
@@ -52,12 +52,16 @@ export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: Select
 
       if (fetchError) throw fetchError;
 
-      const cleanedData = (data || []).map((invoice: any) => ({
-        ...invoice,
-        restaurant: Array.isArray(invoice.restaurant)
-          ? invoice.restaurant[0] || null
-          : invoice.restaurant,
-      })) as InvoiceForSelection[];
+      const cleanedData = (data || []).map((invoice: any) => {
+        const { supplier, ...rest } = invoice;
+        return {
+          ...rest,
+          supplierName: supplier ?? undefined,
+          restaurant: Array.isArray(rest.restaurant)
+            ? rest.restaurant[0] || null
+            : rest.restaurant,
+        } as InvoiceForSelection;
+      });
 
       setInvoices(cleanedData);
     } catch (err) {
@@ -87,7 +91,7 @@ export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: Select
     return (
       getFileName(invoice.storage_path).toLowerCase().includes(searchLower) ||
       (invoice.restaurant?.name || '').toLowerCase().includes(searchLower) ||
-      (invoice.supplier && invoice.supplier.toLowerCase().includes(searchLower))
+      (invoice.supplierName && invoice.supplierName.toLowerCase().includes(searchLower))
     );
   });
 
@@ -163,9 +167,9 @@ export default function SelectInvoiceModal({ isOpen, onClose, onSelect }: Select
                         <p className="text-sm text-gray-500">
                           Date : {formatDate(invoice.invoice_date)}
                         </p>
-                        {invoice.supplier && (
+                        {invoice.supplierName && (
                           <p className="text-sm text-gray-500">
-                            Fournisseur : {invoice.supplier}
+                            Fournisseur : {invoice.supplierName}
                           </p>
                         )}
                       </div>
