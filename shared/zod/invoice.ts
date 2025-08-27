@@ -15,7 +15,7 @@ export const InvoiceHeaderPayload = z.object({
   subtotal_excl_cents: z.number().int().nonnegative().nullable().optional(),
   total_vat_cents: z.number().int().nonnegative().nullable().optional(),
   total_incl_cents: z.number().int().nonnegative().nullable().optional(),
-  meta_rounding_diff_cents: z.number().int().nonnegative().optional(),
+  meta_rounding_diff_cents: z.number().int().nonnegative().nullable().optional(),
 });
 
 export type InvoiceHeaderPayload = z.infer<typeof InvoiceHeaderPayload>;
