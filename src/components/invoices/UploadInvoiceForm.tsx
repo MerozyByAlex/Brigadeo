@@ -125,7 +125,7 @@ export default function UploadInvoiceForm({ onSuccess }: UploadInvoiceFormProps)
           organization_id: profile.organization_id,
           restaurant_id: restaurantId,
           storage_path: uploadData.path,
-          date,
+          invoice_date: date,
           supplier: supplier.trim() || null
         }])
         .select()

@@ -9,7 +9,7 @@ import UploadInvoiceForm from '../../components/invoices/UploadInvoiceForm';
 
 type Invoice = {
   id: string;
-  date: string;
+  invoice_date: string;
   storage_path: string;
   supplier: string | null;
   restaurant: {
@@ -36,7 +36,7 @@ export default function InvoiceList() {
         .from('invoice')
         .select(`
           id,
-          date,
+          invoice_date,
           storage_path,
           supplier,
           restaurant:restaurant_id (
@@ -44,7 +44,7 @@ export default function InvoiceList() {
           )
         `)
         .eq('organization_id', profile.organization_id)
-        .order('date', { ascending: false });
+        .order('invoice_date', { ascending: false });
 
       if (fetchError) throw fetchError;
         const formattedInvoices = (data || []).map(invoice => ({
@@ -151,7 +151,7 @@ export default function InvoiceList() {
               {invoices.map((invoice) => (
                 <tr key={invoice.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(invoice.date)}
+                    {formatDate(invoice.invoice_date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {invoice.restaurant.name}
