@@ -11,7 +11,9 @@ type Invoice = {
   id: string;
   invoice_date: string;
   storage_path: string;
-  supplier: string | null;
+  supplier: {
+    name: string;
+  } | null;
   restaurant: {
     name: string;
   };
@@ -38,7 +40,9 @@ export default function InvoiceList() {
           id,
           invoice_date,
           storage_path,
-          supplier,
+          supplier:supplier_id (
+            name
+          ),
           restaurant:restaurant_id (
             name
           )
@@ -51,7 +55,10 @@ export default function InvoiceList() {
           ...invoice,
           restaurant: Array.isArray(invoice.restaurant)
             ? invoice.restaurant[0]
-            : invoice.restaurant
+            : invoice.restaurant,
+          supplier: Array.isArray(invoice.supplier)
+            ? invoice.supplier[0]
+            : invoice.supplier
         }));
         setInvoices(formattedInvoices);
     } catch (err) {
@@ -157,7 +164,7 @@ export default function InvoiceList() {
                     {invoice.restaurant.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {invoice.supplier || '-'}
+                    {invoice.supplier?.name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <div className="flex justify-end gap-2">
