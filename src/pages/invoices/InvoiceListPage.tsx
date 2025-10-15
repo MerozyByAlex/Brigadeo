@@ -10,6 +10,7 @@ import InvoiceCreateModal from '../../components/invoices/InvoiceCreateModal';
 import type { InvoiceHeaderWithRelations } from '../../types/invoice';
 
 type InvoiceForList = InvoiceHeaderWithRelations & {
+  id: string;
   supplierName?: string;
 };
 
@@ -18,11 +19,11 @@ type Supplier = {
   name: string;
 };
 
-const formatEuro = (cents: number | null): string => {
-  if (cents === null) return '—';
-  return new Intl.NumberFormat('fr-FR', { 
-    style: 'currency', 
-    currency: 'EUR' 
+const formatEuro = (cents: number | null | undefined): string => {
+  if (cents === null || cents === undefined) return '—';
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR'
   }).format(cents / 100);
 };
 
@@ -188,7 +189,7 @@ export default function InvoiceListPage() {
                 <tr
                   key={invoice.id}
                   className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => openDetail(invoice.id)}
+                  onClick={() => invoice.id && openDetail(invoice.id)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {invoice.invoice_number || '—'}
@@ -213,7 +214,7 @@ export default function InvoiceListPage() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openDetail(invoice.id);
+                        invoice.id && openDetail(invoice.id);
                       }}
                       icon={<Eye className="h-4 w-4" />}
                     >

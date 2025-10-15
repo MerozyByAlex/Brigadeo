@@ -10,8 +10,8 @@ type InvoiceDetailModalProps = {
   onClose: () => void;
 };
 
-const formatEuro = (cents: number | null): string => {
-  if (cents === null) return '—';
+const formatEuro = (cents: number | null | undefined): string => {
+  if (cents === null || cents === undefined) return '—';
   return (cents / 100).toFixed(2) + ' €';
 };
 

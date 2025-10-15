@@ -15,6 +15,6 @@ export type InvoiceHeaderWithRelations = InvoiceHeader & {
     id: string;
     name: string;
   } | null;
-  storage_path?: string | null;
-  supplierName?: string; // Pour la compatibilité avec InvoiceListPage
+  storage_path?: string;
+  supplierName?: string;
 };
