@@ -5,7 +5,7 @@ import { getCurrentProfile } from '../../utils/auth';
 import FormField from '../ui/FormField';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import { InvoiceHeaderPayload } from '../../../shared/zod/invoice';
+import { InvoiceHeaderPayload } from 'shared/zod/invoice';
 
 type Restaurant = {
   id: string;

@@ -7,7 +7,7 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import FormField from '../ui/FormField';
-import { InvoiceHeaderPayload } from '../../../shared/zod/invoice';
+import { InvoiceHeaderPayload } from 'shared/zod/invoice';
 
 type InvoiceCreateModalProps = {
   isOpen: boolean;

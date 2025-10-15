@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { InvoiceHeaderPayload, InvoiceLinePayload, InvoiceUpsertLinesPayload } from "../../shared/zod/invoice";
+import { InvoiceHeaderPayload, InvoiceLinePayload, InvoiceUpsertLinesPayload } from "shared/zod/invoice";
 
 export type InvoiceHeader = z.infer<typeof InvoiceHeaderPayload>;
 export type InvoiceLine = z.infer<typeof InvoiceLinePayload>;

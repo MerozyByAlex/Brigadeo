@@ -1,6 +1,6 @@
 import { getSessionToken } from '../utils/auth';
 import { supabase } from '../lib/supabase';
-import { InvoiceHeaderPayload, InvoiceLinePayload } from '../../shared/zod/invoice';
+import { InvoiceHeaderPayload, InvoiceLinePayload } from 'shared/zod/invoice';
 import type { InvoiceLine, InvoiceHeaderWithRelations } from '../types/invoice';
 
 export async function getInvoiceById(id: string): Promise<InvoiceHeaderWithRelations> {
